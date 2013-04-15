@@ -1,0 +1,198 @@
+<!--
+To change this template, choose Tools | Templates
+and open the template in the editor.
+-->
+<!DOCTYPE html>
+<html>
+    <head>
+        <title></title>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <script src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
+        <script src="http://code.jquery.com/ui/1.10.2/jquery-ui.js"></script>
+        <script type="text/javascript" src="js/timetable.js"></script>
+        
+        <style type="text/css">
+            
+            .tt-day {
+                border-left: 1px solid gray;
+                border-top: 1px solid gray;
+            }
+            .tt-hour {
+                border-left: 1px dashed gray;
+                border-top: 1px dashed gray;
+            }
+            
+            .tt-event {
+                background-color: yellow;
+                border: 1px solid green;
+                overflow: hidden;
+                
+            }
+        </style>
+        
+        <script type="text/javascript">
+            $(document).ready(function() {
+                
+                var activities = [
+                    [
+                        {
+                            startTime: "07:20",
+                            scheduledDay: 1,
+                            duration: 60,
+                            title: "testing Mon 07:20 - 1hr"
+                        },
+                        {
+                            startTime: "07:20",
+                            scheduledDay: 4,
+                            duration: 120,
+                            title: "testing Thur 07:20 - 2hrs"
+                        }, 
+                        
+                        {
+                            startTime: "07:20",
+                            scheduledDay: 4,
+                            duration: 180,
+                            title: "testing ** Thur 07:20 - 3hrs"
+                        }, 
+                        {
+                            startTime: "09:40",
+                            scheduledDay: 4,
+                            duration: 180,
+                            title: "testing ** Thur 09:40 - 3hrs"
+                        }, 
+                        {
+                            startTime: "09:45",
+                            scheduledDay: 4,
+                            duration: 60,
+                            title: "testing ** Thur 09:45 - 1hrs"
+                        }, 
+                        {
+                            startTime: "08:30",
+                            scheduledDay: 4,
+                            duration: 120,
+                            title: "testing ** Thur 08:30 - 2hrs"
+                        }, 
+                        {
+                            startTime: "06:20",
+                            scheduledDay: 4,
+                            duration: 60,
+                            title: "testing Thur 06:20 - 1hrs"
+                        }, 
+                        {
+                            startTime: "06:20",
+                            scheduledDay: 4,
+                            duration: 120,
+                            title: "testing Thur 06:20 - 2hrs"
+                        },        
+                        
+                        {
+                            startTime: "11:50",
+                            scheduledDay: 4,
+                            duration: 30,
+                            title: "testing Thu 11:50 - 30 min"
+                        },
+                        {
+                            startTime: "09:20",
+                            scheduledDay: 6,
+                            duration: 120,
+                            title: "testing Sat 09:20 - 2hrs"
+                        }
+                        
+                    ],
+                    [
+                        {
+                            startTime: "13:20",
+                            scheduledDay: 1,
+                            duration: 60,
+                            title: "testing Mon 13:20 - 1hr"
+                        },{
+                            startTime: "10:00",
+                            scheduledDay: 2,
+                            duration: 40,
+                            title: "testing Tue 10:00 - 40min"
+                        },{
+                            startTime: "16:50",
+                            scheduledDay: 3,
+                            duration: 180,
+                            title: "testing Wed 16:50 - 3hrs"
+                        },{
+                            startTime: "09:20",
+                            scheduledDay: 4,
+                            duration: 120,
+                            title: "testing Thur 09:20 - 2hrs"
+                        },
+                        {
+                            startTime: "13:00",
+                            scheduledDay: 0,
+                            duration: 40,
+                            title: "testing Sun 13:00 - 40min"
+                        }
+                        
+                    ]
+                    
+                ];
+                    
+                    
+                    var ev = 0;
+                    
+                    var orientation = 0;
+                    var orientations = ['portrait', 'landscape'];
+                    
+                var timetable = $('.timetable').timetable({
+                    //activities: activities[ev],
+                    activities: function() {
+                        return activities[ev];
+                    },
+//                    ActivityOptions: {
+//                        content: function() {
+//                            return "("+this.position+")"+this.title;
+//                        }
+//                    },
+                    orientation: orientations[ev]
+
+                }).data( "timetable" );
+
+            
+                $(".timetable").mousedown(function(event) {
+                    switch (event.which) {
+                        case 1:
+                                orientation = 1-orientation;
+                                timetable.option(
+                                        {
+                                            orientation: orientations[orientation]
+                                        }
+                                );
+                            break;
+                        case 3:
+                               ev = 1-ev;
+                                timetable.option(
+                                        {
+                                            activities: activities[ev]
+                                        }
+                                );  
+                            break;
+                    }
+                    event.stopPropagation();
+                    
+                });
+               
+                
+                $('.timetable').bind("orientationChanged", function(evnt) {
+                    console.log("Orientation Changed :: " + evnt.newValue);
+                });
+                
+                $('.timetable').bind("activitiesChanged", function(evnt) {
+                    console.log("Activities Changed :: " + evnt.newValue);
+                });
+                
+            });
+        </script>
+    </head>
+    <body>
+        
+        <div style="width: 100%;">
+            <div class="timetable" style="width: 100%;">
+            </div>
+       </div>
+    </body>
+</html>
