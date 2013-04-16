@@ -185,7 +185,13 @@ var TimeTable = function(options, container) {
             }
         };
         $.extend(true, DC, {
-            dayNames: {en: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]},
+            dayNames: {
+                en: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
+                fr: ["Dim", "Lun", "Mar", "Mer", "Jeu", "Ven", "Sam"],
+                de: ["Son", "Mon", "Die", "Mit", "Don", "Fr", "Sam"],
+                es: ["Dom", "Lun", "Mar", "Mie", "Jue", "Vie", "Sab"],
+                it: ["Dom", "Lun", "Mar", "Mer", "Gio", "Ven", "Sab"]
+            },
             lang: "en",
             day: 0,
             init: function() {
