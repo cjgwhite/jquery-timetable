@@ -9,10 +9,63 @@ var TimeTable = function(options, container) {
         startDay: 1,
         endDay: 5,
         activities: [],
-        hoursOptions: {},
-        daysOptions: {},
-        ActivityOptions: {},
-        ActivitiesOptions: {}
+        hoursOptions: {
+            events: {}
+        },
+        daysOptions: {
+            events: {}
+        },
+        ActivityOptions: {
+            mouseoverDelay: 500,
+            mouseoverMinHeight: 0,
+            mouseoverMinWidth: 0,
+            mouseoverEasing: "easeOutElastic",
+            mouseoverSpeed: "normal",
+            events: {
+                "mouseenter": function(){
+                     var content = this;
+                     content.oldH = $(content).height();
+                     content.oldW = $(content).width();
+                     var position  = $(content).position();
+                     content.oldT = position.top;
+                     content.oldL = position.left;
+                     this.to = setTimeout(function () {
+                         var css = {};
+                         $(content).css({
+                                "z-index": 1000,
+                                "-moz-box-shadow": "0 4px 8px rgba(0,0,0,0.5)",
+                                "-webkit-box-shadow": "0 4px 8px rgba(0,0,0,0.5)",
+                                "box-shadow": "0 4px 8px rgba(0,0,0,0.5)"
+                         });
+                         var width = Math.max(content.scrollWidth, defaultOptions.ActivityOptions.mouseoverMinWidth);
+                         var height = Math.max(content.scrollHeight, defaultOptions.ActivityOptions.mouseoverMinHeight);
+                         var diffH = height - content.oldH;
+                         var diffW = width - content.oldW;
+                         if(diffH > 0) {
+                             css['top'] = "-="+diffH/2;
+                             css['height'] = "+="+diffH;
+                         }
+                         if (diffW > 0) {
+                             css['left'] = "-="+diffW/2;
+                             css['width'] = "+="+diffW;
+                         }
+
+                         $(content).animate(css, defaultOptions.ActivityOptions.mouseoverSpeed, defaultOptions.ActivityOptions.mouseoverEasing);
+                     }, defaultOptions.ActivityOptions.mouseoverDelay);
+
+                 },
+                 "mouseleave": function() {
+                     clearTimeout(this.to);
+                     $(this).css({
+                                "z-index": 0,
+                                "-moz-box-shadow": "none",
+                                "-webkit-box-shadow": "none",
+                                "box-shadow": "none"
+                         });
+                     $(this).animate({width: this.oldW, height: this.oldH, top: this.oldT, left: this.oldL, "z-index":0}, defaultOptions.ActivityOptions.mouseoverSpeed, defaultOptions.ActivityOptions.mouseoverEasing);
+                 }        
+            }
+        }
     };
 
     var OptionsDependant = function(container) {
@@ -42,7 +95,7 @@ var TimeTable = function(options, container) {
                                 .addClass("tt-container")
                                 .css(cssObj);
                     },
-                    _init: function() {
+                    _init: function() {          
                         this.hoursContainer.init();
                         this.daysContainer.init();
                         this.resize();
@@ -124,7 +177,7 @@ var TimeTable = function(options, container) {
                 var aHours = new Array();
                 for (var hour = 0; hour < 24; hour++) {
                     var hourStr = (hour < 10) ? "0" + hour + "00" : hour + "00";
-                    aHours.push($("<div/>", {"class": "tt-hour", style: "width: 100%;"}).text(hourStr));
+                    aHours.push($("<div/>", {"class": "tt-hour", style: "width: 100%;"}).text(hourStr).on(this.events));
                 }
                 return aHours;
             },
@@ -200,13 +253,13 @@ var TimeTable = function(options, container) {
             },
             _generateDays: function() {
                 return [
-                    $("<div/>", {"class": "tt-day"}).text(this.dayNames[this.lang][0]),
-                    $("<div/>", {"class": "tt-day"}).text(this.dayNames[this.lang][1]),
-                    $("<div/>", {"class": "tt-day"}).text(this.dayNames[this.lang][2]),
-                    $("<div/>", {"class": "tt-day"}).text(this.dayNames[this.lang][3]),
-                    $("<div/>", {"class": "tt-day"}).text(this.dayNames[this.lang][4]),
-                    $("<div/>", {"class": "tt-day"}).text(this.dayNames[this.lang][5]),
-                    $("<div/>", {"class": "tt-day"}).text(this.dayNames[this.lang][6])
+                    $("<div/>", {"class": "tt-day"}).text(this.dayNames[this.lang][0]).on(this.events),
+                    $("<div/>", {"class": "tt-day"}).text(this.dayNames[this.lang][1]).on(this.events),
+                    $("<div/>", {"class": "tt-day"}).text(this.dayNames[this.lang][2]).on(this.events),
+                    $("<div/>", {"class": "tt-day"}).text(this.dayNames[this.lang][3]).on(this.events),
+                    $("<div/>", {"class": "tt-day"}).text(this.dayNames[this.lang][4]).on(this.events),
+                    $("<div/>", {"class": "tt-day"}).text(this.dayNames[this.lang][5]).on(this.events),
+                    $("<div/>", {"class": "tt-day"}).text(this.dayNames[this.lang][6]).on(this.events)
                 ];
             },
             render: function() {
@@ -329,7 +382,6 @@ var TimeTable = function(options, container) {
                     this.options.endDay = this.dow;
                     changed = true;
                 }
-
                 this._attach();
 
 
@@ -464,7 +516,7 @@ var TimeTable = function(options, container) {
 
         A._init();
         
-        
+        $(A.activityObj).on(A.events);
         
         return A;
     };

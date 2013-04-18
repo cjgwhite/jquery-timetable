@@ -9,6 +9,8 @@ and open the template in the editor.
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
         <script src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
         <script src="http://code.jquery.com/ui/1.10.2/jquery-ui.js"></script>
+        <!--<script src="http://cdn.jquerytools.org/1.2.7/full/jquery.tools.min.js"></script>-->
+        
         <script type="text/javascript" src="js/timetable.js"></script>
         
         <style type="text/css">
@@ -138,16 +140,23 @@ and open the template in the editor.
                     var orientation = 0;
                     var orientations = ['portrait', 'landscape'];
                     
+                    
+
+                    
                 var timetable = $('.timetable').timetable({
                     //activities: activities[ev],
                     activities: function() {
                         return activities[ev];
                     },
-//                    ActivityOptions: {
-//                        content: function() {
-//                            return "("+this.position+")"+this.title;
-//                        }
-//                    },
+
+                    ActivityOptions: {
+                        content: function() {
+                            var content = $("<div/>", {style: "white-space: nowrap;"}).html(this.title + "<br />" + this.hour + ":" + this.minute   + " - " + this.duration + " Minutes");
+
+                            return content;
+                        }
+                    },
+
                     orientation: orientations[ev]
 
                 }).data( "timetable" );
@@ -175,7 +184,7 @@ and open the template in the editor.
                     event.stopPropagation();
                     
                 });
-               
+
                 
                 $('.timetable').bind("orientationChanged", function(evnt) {
                     console.log("Orientation Changed :: " + evnt.newValue);
