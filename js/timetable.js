@@ -22,22 +22,22 @@ var TimeTable = function(options, container) {
             mouseoverEasing: "easeOutElastic",
             mouseoverSpeed: "normal",
             events: {
-                "mouseenter": function(){
+                "focus mouseenter": function(){
                      var content = this;
+                     if (content.expanded != true) {
+                         content.expanded = true;
+                     var position  = $(content).position();
                      content.oldH = $(content).height();
                      content.oldW = $(content).width();
-                     var position  = $(content).position();
                      content.oldT = position.top;
                      content.oldL = position.left;
                      this.to = setTimeout(function () {
                          var css = {};
                          $(content).css({
                                 "z-index": 1000,
-                                "-moz-box-shadow": "0 4px 8px rgba(0,0,0,0.5)",
-                                "-webkit-box-shadow": "0 4px 8px rgba(0,0,0,0.5)",
-                                "box-shadow": "0 4px 8px rgba(0,0,0,0.5)"
+                                "box-shadow": "0 6px 10px rgba(0,0,0,0.75)"
                          });
-                         var width = Math.max(content.scrollWidth, defaultOptions.ActivityOptions.mouseoverMinWidth);
+                         var width = Math.max(content.scrollWidth, defaultOptions.ActivityOptions.mouseoverMinWidth) + 5;
                          var height = Math.max(content.scrollHeight, defaultOptions.ActivityOptions.mouseoverMinHeight);
                          var diffH = height - content.oldH;
                          var diffW = width - content.oldW;
@@ -49,20 +49,24 @@ var TimeTable = function(options, container) {
                              css['left'] = "-="+diffW/2;
                              css['width'] = "+="+diffW;
                          }
+                             
+                            $(content).animate(css, defaultOptions.ActivityOptions.mouseoverSpeed, defaultOptions.ActivityOptions.mouseoverEasing);
 
-                         $(content).animate(css, defaultOptions.ActivityOptions.mouseoverSpeed, defaultOptions.ActivityOptions.mouseoverEasing);
                      }, defaultOptions.ActivityOptions.mouseoverDelay);
-
+                    }
                  },
-                 "mouseleave": function() {
+                 "blur mouseleave": function() {
                      clearTimeout(this.to);
+                     if (this.expanded == true) {
+                         this.expanded = false;
                      $(this).css({
                                 "z-index": 0,
-                                "-moz-box-shadow": "none",
-                                "-webkit-box-shadow": "none",
                                 "box-shadow": "none"
                          });
-                     $(this).animate({width: this.oldW, height: this.oldH, top: this.oldT, left: this.oldL, "z-index":0}, defaultOptions.ActivityOptions.mouseoverSpeed, defaultOptions.ActivityOptions.mouseoverEasing);
+                     
+                        $(this).animate({width: this.oldW, height: this.oldH, top: this.oldT, left: this.oldL, "z-index":0}, defaultOptions.ActivityOptions.mouseoverSpeed, defaultOptions.ActivityOptions.mouseoverEasing);
+                        
+                     }
                  }        
             }
         }
@@ -351,12 +355,13 @@ var TimeTable = function(options, container) {
         };
 
         $.extend(true, A, {
+            color: "#C0A3D1",
             title: "Event Title",
             startTime: "00:00",
             scheduledDay: 0,
             duration: 60,
             activityMargin: 0,
-            activityObj: $("<div/>", {"class": "tt-event", style: "position: relative; display: none"}),
+            activityObj: $("<div/>", {"class": "tt-event", style: "position: relative; display: none;", "tabindex": 0}),
             _init: function() {
                 
                 var start = this.startTime.split(":");
@@ -391,6 +396,7 @@ var TimeTable = function(options, container) {
                     this.resize();
                 }
                 
+                this._setColour();
                 $(this.container).on("activityAdded", $.proxy(this._onActivityAdded,this));
                 
             },
@@ -442,6 +448,29 @@ var TimeTable = function(options, container) {
 
             content: function() {
                 return this.title + "<br />" + this.hour + ":" + this.minute   + " - " + this.duration + " Minutes";
+            },
+            _setColour: function() {
+                var baseColour = this.activityObj.css("background-color");
+                if (this.color) baseColour = this.color;
+                if (this.colour) baseColour = this.colour;
+                console.log("BASECOLOUR : "+baseColour);
+                
+                this.activityObj.css({"background-color": baseColour});
+                if ($.isFunction($.Color)) {
+                    
+                    var startColour = $.Color(baseColour);
+                    var lightness = startColour.lightness();
+                    var change = lightness/4;
+                    var endColour = startColour.lightness("-="+change);
+                    
+                    var css = {
+                        background: 'linear-gradient(120deg, '+startColour.toHexString()+' 30%, '+endColour.toHexString() +' 70%)'
+                    }
+                    
+                    this.activityObj.css(css);
+                    
+                }
+                
             },
             _attach: function() {
                 var content = "";
