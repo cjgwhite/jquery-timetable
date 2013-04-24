@@ -453,7 +453,6 @@ var TimeTable = function(options, container) {
                 var baseColour = this.activityObj.css("background-color");
                 if (this.color) baseColour = this.color;
                 if (this.colour) baseColour = this.colour;
-                console.log("BASECOLOUR : "+baseColour);
                 
                 this.activityObj.css({"background-color": baseColour});
                 if ($.isFunction($.Color)) {
