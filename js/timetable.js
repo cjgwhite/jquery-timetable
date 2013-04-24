@@ -21,54 +21,7 @@ var TimeTable = function(options, container) {
             mouseoverMinWidth: 0,
             mouseoverEasing: "easeOutElastic",
             mouseoverSpeed: "normal",
-            events: {
-                "focus mouseenter": function(){
-                     var content = this;
-                     if (content.expanded != true) {
-                         content.expanded = true;
-                     var position  = $(content).position();
-                     content.oldH = $(content).height();
-                     content.oldW = $(content).width();
-                     content.oldT = position.top;
-                     content.oldL = position.left;
-                     this.to = setTimeout(function () {
-                         var css = {};
-                         $(content).css({
-                                "z-index": 1000,
-                                "box-shadow": "0 6px 10px rgba(0,0,0,0.75)"
-                         });
-                         var width = Math.max(content.scrollWidth, defaultOptions.ActivityOptions.mouseoverMinWidth) + 5;
-                         var height = Math.max(content.scrollHeight, defaultOptions.ActivityOptions.mouseoverMinHeight);
-                         var diffH = height - content.oldH;
-                         var diffW = width - content.oldW;
-                         if(diffH > 0) {
-                             css['top'] = "-="+diffH/2;
-                             css['height'] = "+="+diffH;
-                         }
-                         if (diffW > 0) {
-                             css['left'] = "-="+diffW/2;
-                             css['width'] = "+="+diffW;
-                         }
-                             
-                            $(content).animate(css, defaultOptions.ActivityOptions.mouseoverSpeed, defaultOptions.ActivityOptions.mouseoverEasing);
-
-                     }, defaultOptions.ActivityOptions.mouseoverDelay);
-                    }
-                 },
-                 "blur mouseleave": function() {
-                     clearTimeout(this.to);
-                     if (this.expanded == true) {
-                         this.expanded = false;
-                     $(this).css({
-                                "z-index": 0,
-                                "box-shadow": "none"
-                         });
-                     
-                        $(this).animate({width: this.oldW, height: this.oldH, top: this.oldT, left: this.oldL, "z-index":0}, defaultOptions.ActivityOptions.mouseoverSpeed, defaultOptions.ActivityOptions.mouseoverEasing);
-                        
-                     }
-                 }        
-            }
+            events: {}
         }
     };
 
@@ -527,7 +480,56 @@ var TimeTable = function(options, container) {
                 var content = $.proxy(this.content, this);
                     this.activityObj.html(content());
                 
+            },
+            events: {
+                "focus mouseenter": function(){
+                         var content = (this.activityObj) ? this.activityObj : this;
+                         if (content.expanded != true) {
+                             content.expanded = true;
+                            var position  = $(content).position();
+                            content.oldH = $(content).height();
+                            content.oldW = $(content).width();
+                            content.oldT = position.top;
+                            content.oldL = position.left;
+                            this.to = setTimeout(function () {
+                                var css = {};
+                                $(content).css({
+                                       "z-index": 1000,
+                                       "box-shadow": "0 6px 10px rgba(0,0,0,0.75)"
+                                });
+                                var width = Math.max(content.scrollWidth, defaultOptions.ActivityOptions.mouseoverMinWidth) + 5;
+                                var height = Math.max(content.scrollHeight, defaultOptions.ActivityOptions.mouseoverMinHeight);
+                                var diffH = height - content.oldH;
+                                var diffW = width - content.oldW;
+                                if(diffH > 0) {
+                                    css['top'] = "-="+diffH/2;
+                                    css['height'] = "+="+diffH;
+                                }
+                                if (diffW > 0) {
+                                    css['left'] = "-="+diffW/2;
+                                    css['width'] = "+="+diffW;
+                                }
+
+                                   $(content).animate(css, defaultOptions.ActivityOptions.mouseoverSpeed, defaultOptions.ActivityOptions.mouseoverEasing);
+
+                            }, defaultOptions.ActivityOptions.mouseoverDelay);
+                        }
+                },
+                "blur mouseleave": function() {
+                         clearTimeout(this.to);
+                         if (this.expanded == true) {
+                             this.expanded = false;
+                         $(this).css({
+                                    "z-index": 0,
+                                    "box-shadow": "none"
+                             });
+
+                            $(this).animate({width: this.oldW, height: this.oldH, top: this.oldT, left: this.oldL, "z-index":0}, defaultOptions.ActivityOptions.mouseoverSpeed, defaultOptions.ActivityOptions.mouseoverEasing);
+
+                         }
+                }
             }
+
 
         }, A.options.ActivityOptions, data);
         
