@@ -2,6 +2,9 @@ var TimeTable = function(options, container) {
     
     var defaultOptions = {
         orientation: "landscape",
+        dayView: false,
+        dayViewThreshold: 300,
+        dayViewChangeEvent: "click",
         minHourSize: 50,
         minDaySize: 50,
         startHour: 9,
@@ -33,7 +36,24 @@ var TimeTable = function(options, container) {
                 true,
                 defaultOptions,
                 options
-                )
+        ),
+        __orientation: function() {
+            
+            if (this.options.dayView || this.container.width() < this.options.dayViewThreshold) {
+                return 'portrait';
+            } else {
+                return this.options.orientation;
+            }
+            
+        },
+                
+        __isDayView: function() {
+            if (this.options.dayView || this.container.width() < this.options.dayViewThreshold) {
+                return true;
+            } else {
+                return false;
+            }
+        }
     }
 
     function createTimeTable() {
@@ -144,14 +164,14 @@ var TimeTable = function(options, container) {
                 this.resize();
             },
             resize: function() {
-                this.options.hourSize = parseInt(this.container.css(posRef[this.options.orientation].size)) / (this.hour + 2);
+                this.options.hourSize = parseInt(this.container.css(posRef[this.__orientation()].size)) / (this.hour + 2);
                 this.options.hourNumber = this.hour;
 
                 if (this.options['minHourSize'] != null && this.options.hourSize < this.options.minHourSize) {
                     this.options.hourSize = this.options.minHourSize;
 
                     var cssObj = {};
-                    cssObj[posRef[this.options.orientation].size] = this.options.hourSize * (this.hour + 2);
+                    cssObj[posRef[this.__orientation()].size] = this.options.hourSize * (this.hour + 2);
                     this.container.css(cssObj);
 
                 }
@@ -163,10 +183,10 @@ var TimeTable = function(options, container) {
                         position: "absolute",
                         height: "100%"
                     };
-                    cssObj[posRef[that.options.orientation].size] = size;
-                    cssObj[posRef[that.options.orientation].nonsize] = "100%";
-                    cssObj[posRef[that.options.orientation].position] = offset + (size * index);
-                    cssObj[posRef[that.options.orientation].nonposition] = 0;
+                    cssObj[posRef[that.__orientation()].size] = size;
+                    cssObj[posRef[that.__orientation()].nonsize] = "100%";
+                    cssObj[posRef[that.__orientation()].position] = offset + (size * index);
+                    cssObj[posRef[that.__orientation()].nonposition] = 0;
                     $(this).css(cssObj);
                 });
             }
@@ -206,22 +226,41 @@ var TimeTable = function(options, container) {
             day: 0,
             init: function() {
                 this.days = this._generateDays();
+                this.viewDay = this.options.startDay;
                 this.render();
+            },
+            __dayChange: function() {
+                console.log("Day Click");
+                //if (DC.__isDayView()) {
+                    DC.viewDay++;
+                    if (DC.viewDay > DC.options.endDay) DC.viewDay = DC.options.startDay;
+                    console.log("VIEWDAY = "+DC.viewDay);
+                    console.log("ENDDAY = "+DC.options.endDay);
+                    DC.render();
+                //}
             },
             _generateDays: function() {
                 return [
-                    $("<div/>", {"class": "tt-day"}).text(this.dayNames[this.lang][0]).on(this.events),
-                    $("<div/>", {"class": "tt-day"}).text(this.dayNames[this.lang][1]).on(this.events),
-                    $("<div/>", {"class": "tt-day"}).text(this.dayNames[this.lang][2]).on(this.events),
-                    $("<div/>", {"class": "tt-day"}).text(this.dayNames[this.lang][3]).on(this.events),
-                    $("<div/>", {"class": "tt-day"}).text(this.dayNames[this.lang][4]).on(this.events),
-                    $("<div/>", {"class": "tt-day"}).text(this.dayNames[this.lang][5]).on(this.events),
-                    $("<div/>", {"class": "tt-day"}).text(this.dayNames[this.lang][6]).on(this.events)
+                    $("<div/>", {"class": "tt-day"}).on(this.events).text(this.dayNames[this.lang][0]),
+                    $("<div/>", {"class": "tt-day"}).on(this.events).text(this.dayNames[this.lang][1]),
+                    $("<div/>", {"class": "tt-day"}).on(this.events).text(this.dayNames[this.lang][2]),
+                    $("<div/>", {"class": "tt-day"}).on(this.events).text(this.dayNames[this.lang][3]),
+                    $("<div/>", {"class": "tt-day"}).on(this.events).text(this.dayNames[this.lang][4]),
+                    $("<div/>", {"class": "tt-day"}).on(this.events).text(this.dayNames[this.lang][5]),
+                    $("<div/>", {"class": "tt-day"}).on(this.events).text(this.dayNames[this.lang][6])
                 ];
             },
             render: function() {
-                this.container.append(this.days.slice(this.options.startDay, this.options.endDay + 1));
-                this.day = this.options.endDay - this.options.startDay;
+                $('.tt-day', this.container).remove();
+                
+                if (this.__isDayView()) {
+                   
+                    this.container.append(this.days[this.viewDay].one(this.options.dayViewChangeEvent, this.__dayChange));
+                    this.day = 0;
+                } else {
+                    this.container.append(this.days.slice(this.options.startDay, this.options.endDay + 1));
+                    this.day = this.options.endDay - this.options.startDay;
+                }
                 this.resize();
             },
             daysActivities: new Array(),
@@ -254,13 +293,13 @@ var TimeTable = function(options, container) {
             },
             resize: function() {
 
-                this.options.daySize = parseInt(this.container.css(posRef[this.options.orientation].size)) / (this.day + 2);
+                this.options.daySize = parseInt(this.container.css(posRef[this.__orientation()].size)) / (this.day + 2);
 
                 if (this.options['minDaySize'] != null && this.options.daySize < this.options.minDaySize) {
                     this.options.daySize = this.options.minDaySize;
 
                     var cssObj = {};
-                    cssObj[posRef[this.options.orientation].size] = this.options.daySize * (this.day + 2);
+                    cssObj[posRef[this.__orientation()].size] = this.options.daySize * (this.day + 2);
                     this.container.css(cssObj);
 
                 }
@@ -275,10 +314,10 @@ var TimeTable = function(options, container) {
                     var cssObj = {
                         position: "absolute"
                     };
-                    cssObj[posRef[that.options.orientation].size] = size;
-                    cssObj[posRef[that.options.orientation].nonsize] = "100%";
-                    cssObj[posRef[that.options.orientation].position] = offset + (size * index);
-                    cssObj[posRef[that.options.orientation].nonposition] = 0;
+                    cssObj[posRef[that.__orientation()].size] = size;
+                    cssObj[posRef[that.__orientation()].nonsize] = "100%";
+                    cssObj[posRef[that.__orientation()].position] = offset + (size * index);
+                    cssObj[posRef[that.__orientation()].nonposition] = 0;
                     $(this).css(cssObj);
                 });
             }
@@ -466,14 +505,14 @@ var TimeTable = function(options, container) {
                 //var activityWidth = this.options.daySize / (this.sizeFactor + (this.sizeFactor*sf));
                 var activityWidth = (this.options.daySize) / (this.sizeFactor);
                 
-                cssObj[posRef[this.options.orientation].hour] = (hourIndex * this.options.hourSize) + hourOffset;
-                cssObj[posRef[this.options.orientation].day] = (activityWidth*this.position)+this.activityMargin;// 0;//(dayIndex * this.options.daySize) + (this.options.daySize * 0.1);
-                cssObj[posRef[this.options.orientation].size] = this.duration * (this.options.hourSize / 60)- this.activityMargin;
+                cssObj[posRef[this.__orientation()].hour] = (hourIndex * this.options.hourSize) + hourOffset;
+                cssObj[posRef[this.__orientation()].day] = (activityWidth*this.position)+this.activityMargin;// 0;//(dayIndex * this.options.daySize) + (this.options.daySize * 0.1);
+                cssObj[posRef[this.__orientation()].size] = this.duration * (this.options.hourSize / 60)- this.activityMargin;
                 if (expandto.sizeFactor > 0 && (activityWidth*this.position + activityWidth) != ((this.options.daySize/expandto.sizeFactor) * expandto.position )) {
                     activityWidth += ((this.options.daySize/expandto.sizeFactor) * expandto.position ) - (activityWidth*this.position + activityWidth);
-                    cssObj[posRef[this.options.orientation].nonsize] = activityWidth - this.activityMargin -1;//"100%";//this.options.daySize * 0.8;
+                    cssObj[posRef[this.__orientation()].nonsize] = activityWidth - this.activityMargin -1;//"100%";//this.options.daySize * 0.8;
                 } else
-                    cssObj[posRef[this.options.orientation].nonsize] = activityWidth - (this.activityMargin*2) -1;//"100%";//this.options.daySize * 0.8;
+                    cssObj[posRef[this.__orientation()].nonsize] = activityWidth - (this.activityMargin*2) -1;//"100%";//this.options.daySize * 0.8;
                 
 
                 this.activityObj.css(cssObj);
