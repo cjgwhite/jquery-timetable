@@ -10,6 +10,7 @@ and open the template in the editor.
         <script src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
         <script src="http://code.jquery.com/ui/1.10.2/jquery-ui.js"></script>
         <!--<script src="http://cdn.jquerytools.org/1.2.7/full/jquery.tools.min.js"></script>-->
+        <!--<script src="http://code.jquery.com/mobile/1.3.1/jquery.mobile-1.3.1.min.js"></script>-->
         
         <script type="text/javascript" src="js/timetable.js"></script>
         
@@ -163,7 +164,6 @@ and open the template in the editor.
                     activities: function() {
                         return activities[ev];
                     },
-
                     ActivityOptions: {
                         content: function() {
                             var content = $("<div/>", {style: "white-space: nowrap;"}).html(this.title + "<br />" + this.hour + ":" + this.minute   + " - " + this.duration + " Minutes");
@@ -176,7 +176,7 @@ and open the template in the editor.
 
                 }).data( "timetable" );
 
-            /*
+/*
                 $(".timetable").mousedown(function(event) {
                     switch (event.which) {
                         case 1:

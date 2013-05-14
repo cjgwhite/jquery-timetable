@@ -1,10 +1,10 @@
 var TimeTable = function(options, container) {
-    
+
     var defaultOptions = {
         orientation: "landscape",
         dayView: false,
         dayViewThreshold: 300,
-        dayViewChangeEvent: "click",
+        dayViewChangeEvent: "click swipe",
         minHourSize: 50,
         minDaySize: 50,
         startHour: 9,
@@ -12,6 +12,7 @@ var TimeTable = function(options, container) {
         startDay: 1,
         endDay: 5,
         activities: [],
+        titleSize: 75,
         hoursOptions: {
             events: {}
         },
@@ -36,19 +37,29 @@ var TimeTable = function(options, container) {
                 true,
                 defaultOptions,
                 options
-        ),
-        __orientation: function() {
-            
-            if (this.options.dayView || this.container.width() < this.options.dayViewThreshold) {
+                ),
+        orientation: function() {
+
+            if (this.isDayView()) {
                 return 'portrait';
             } else {
                 return this.options.orientation;
             }
-            
+
         },
-                
-        __isDayView: function() {
-            if (this.options.dayView || this.container.width() < this.options.dayViewThreshold) {
+        isMobile: function() {
+            if (this.options['isMobile'] != null && this.options['isMobile'] != undefined) {
+                if ($.isFunction(this.options.isMobile)) {
+                    return this.options.isMobile();
+                } else {
+                    return this.options.isMobile;
+                }
+            } else {
+                return /Android|webOS|iPhone|iPod|BlackBerry/i.test(navigator.userAgent);
+            }
+        },
+        isDayView: function() {
+            if (this.options.dayView || this.container.width() < this.options.dayViewThreshold || (this.isMobile())) {
                 return true;
             } else {
                 return false;
@@ -72,7 +83,7 @@ var TimeTable = function(options, container) {
                                 .addClass("tt-container")
                                 .css(cssObj);
                     },
-                    _init: function() {          
+                    _init: function() {
                         this.hoursContainer.init();
                         this.daysContainer.init();
                         this.resize();
@@ -104,11 +115,11 @@ var TimeTable = function(options, container) {
                         return this;
                     },
                     render: function(activityList) {
-                
+
                         if (typeof activityList !== 'undefined') {
                             this.options.activities = activityList;
                         }
-                        
+
                         this.daysContainer.renderActivities();
 
                     },
@@ -116,7 +127,7 @@ var TimeTable = function(options, container) {
                         this.activityContainer.render();
                     },
                     resize: function() {
-                        
+
                         $(this.container).trigger("tt.update");
 
                     }
@@ -125,7 +136,7 @@ var TimeTable = function(options, container) {
     }
     ;
 
-    
+
     var HoursContainer = function() {
         var HC = new OptionsDependant(container);
 
@@ -160,33 +171,33 @@ var TimeTable = function(options, container) {
             },
             render: function() {
                 this.container.append(this.hours.slice(this.options.startHour, this.options.endHour + 1));
-                this.hour = this.options.endHour - this.options.startHour;
+                this.hour = this.options.endHour - this.options.startHour + 1;
                 this.resize();
             },
             resize: function() {
-                this.options.hourSize = parseInt(this.container.css(posRef[this.__orientation()].size)) / (this.hour + 2);
+                this.options.hourSize = (parseInt(this.container.css(posRef[this.orientation()].size)) - this.options.titleSize) / (this.hour);
                 this.options.hourNumber = this.hour;
 
                 if (this.options['minHourSize'] != null && this.options.hourSize < this.options.minHourSize) {
                     this.options.hourSize = this.options.minHourSize;
 
                     var cssObj = {};
-                    cssObj[posRef[this.__orientation()].size] = this.options.hourSize * (this.hour + 2);
+                    cssObj[posRef[this.orientation()].size] = (this.options.hourSize * this.hour) + this.options.titleSize;
                     this.container.css(cssObj);
 
                 }
                 var size = this.options.hourSize;
-                var offset = size;
+                var offset = this.options.titleSize;
                 var that = this;
                 $("div.tt-hour", this.container).each(function(index, el) {
                     var cssObj = {
                         position: "absolute",
                         height: "100%"
                     };
-                    cssObj[posRef[that.__orientation()].size] = size;
-                    cssObj[posRef[that.__orientation()].nonsize] = "100%";
-                    cssObj[posRef[that.__orientation()].position] = offset + (size * index);
-                    cssObj[posRef[that.__orientation()].nonposition] = 0;
+                    cssObj[posRef[that.orientation()].size] = size;
+                    cssObj[posRef[that.orientation()].nonsize] = "100%";
+                    cssObj[posRef[that.orientation()].position] = offset + (size * index);
+                    cssObj[posRef[that.orientation()].nonposition] = 0;
                     $(this).css(cssObj);
                 });
             }
@@ -226,65 +237,72 @@ var TimeTable = function(options, container) {
             day: 0,
             init: function() {
                 this.days = this._generateDays();
-                this.viewDay = this.options.startDay;
+                var now = new Date();
+                var today = now.getDay();
+                if (today < this.options.endDay || today > this.options.startDay) {
+                    this.viewDay = this.options.startDay;
+                } else {
+                    this.viewDay = today;
+                }
+
                 this.render();
             },
-            __dayChange: function() {
-                console.log("Day Click");
-                //if (DC.__isDayView()) {
-                    DC.viewDay++;
-                    if (DC.viewDay > DC.options.endDay) DC.viewDay = DC.options.startDay;
-                    console.log("VIEWDAY = "+DC.viewDay);
-                    console.log("ENDDAY = "+DC.options.endDay);
-                    DC.render();
-                //}
+            __dayChange: function(event) {
+                var step = 1;
+                if (event.type == "swiperight") {
+                    step = -1;
+                }
+                DC.viewDay = DC.viewDay + step;
+                if (DC.viewDay > DC.options.endDay)
+                    DC.viewDay = DC.options.startDay;
+                DC.render();
             },
             _generateDays: function() {
                 return [
-                    $("<div/>", {"class": "tt-day"}).on(this.events).text(this.dayNames[this.lang][0]),
-                    $("<div/>", {"class": "tt-day"}).on(this.events).text(this.dayNames[this.lang][1]),
-                    $("<div/>", {"class": "tt-day"}).on(this.events).text(this.dayNames[this.lang][2]),
-                    $("<div/>", {"class": "tt-day"}).on(this.events).text(this.dayNames[this.lang][3]),
-                    $("<div/>", {"class": "tt-day"}).on(this.events).text(this.dayNames[this.lang][4]),
-                    $("<div/>", {"class": "tt-day"}).on(this.events).text(this.dayNames[this.lang][5]),
-                    $("<div/>", {"class": "tt-day"}).on(this.events).text(this.dayNames[this.lang][6])
+                    $("<div/>", {"class": "tt-day"}).on(this.events).append($("<div/>", {"class": "tt-dayTitle"}).text(this.dayNames[this.lang][0])),
+                    $("<div/>", {"class": "tt-day"}).on(this.events).append($("<div/>", {"class": "tt-dayTitle"}).text(this.dayNames[this.lang][1])),
+                    $("<div/>", {"class": "tt-day"}).on(this.events).append($("<div/>", {"class": "tt-dayTitle"}).text(this.dayNames[this.lang][2])),
+                    $("<div/>", {"class": "tt-day"}).on(this.events).append($("<div/>", {"class": "tt-dayTitle"}).text(this.dayNames[this.lang][3])),
+                    $("<div/>", {"class": "tt-day"}).on(this.events).append($("<div/>", {"class": "tt-dayTitle"}).text(this.dayNames[this.lang][4])),
+                    $("<div/>", {"class": "tt-day"}).on(this.events).append($("<div/>", {"class": "tt-dayTitle"}).text(this.dayNames[this.lang][5])),
+                    $("<div/>", {"class": "tt-day"}).on(this.events).append($("<div/>", {"class": "tt-dayTitle"}).text(this.dayNames[this.lang][6]))
                 ];
             },
             render: function() {
-                $('.tt-day', this.container).remove();
-                
-                if (this.__isDayView()) {
-                   
+//                $('.tt-day', this.container).remove();
+
+                if (this.isDayView()) {
+                    $('.tt-day', this.container).remove();
                     this.container.append(this.days[this.viewDay].one(this.options.dayViewChangeEvent, this.__dayChange));
-                    this.day = 0;
+                    this.day = 1;
                 } else {
                     this.container.append(this.days.slice(this.options.startDay, this.options.endDay + 1));
-                    this.day = this.options.endDay - this.options.startDay;
+                    this.day = this.options.endDay - this.options.startDay + 1;
                 }
                 this.resize();
             },
             daysActivities: new Array(),
             renderActivities: function() {
                 $('.tt-event', this.container).remove();
-                
-                $.each(this.daysActivities, function (index, activity){
+
+                $.each(this.daysActivities, function(index, activity) {
                     activity.remove();
                     delete activity;
                 });
-                
+
                 var activities = [];
                 if ($.isFunction(this.options.activities)) {
                     activities = this.options.activities();
                 } else {
                     activities = this.options.activities;
                 }
-                
-                $.each(activities, $.proxy(function(index, activityData){
 
-                    var activity = new Activity(this.days[activityData.scheduledDay],activityData);
-                    
+                $.each(activities, $.proxy(function(index, activityData) {
+
+                    var activity = new Activity(this.days[activityData.scheduledDay], activityData);
+
                     this.daysActivities.push(activity);
-                },this));
+                }, this));
             },
             addActivity: function(activity) {
                 var day = this.days[activity.dow];
@@ -293,19 +311,19 @@ var TimeTable = function(options, container) {
             },
             resize: function() {
 
-                this.options.daySize = parseInt(this.container.css(posRef[this.__orientation()].size)) / (this.day + 2);
+                this.options.daySize = (parseInt(this.container.css(posRef[this.orientation()].size)) - this.options.titleSize) / this.day;
 
                 if (this.options['minDaySize'] != null && this.options.daySize < this.options.minDaySize) {
                     this.options.daySize = this.options.minDaySize;
 
                     var cssObj = {};
-                    cssObj[posRef[this.__orientation()].size] = this.options.daySize * (this.day + 2);
+                    cssObj[posRef[this.orientation()].size] = (this.options.daySize * this.day + 1) + this.options.titleSize;
                     this.container.css(cssObj);
 
                 }
 
                 var size = this.options.daySize;
-                var offset = size;
+                var offset = this.options.titleSize;
 
                 this.options.dayNumber = this.day;
 
@@ -314,15 +332,15 @@ var TimeTable = function(options, container) {
                     var cssObj = {
                         position: "absolute"
                     };
-                    cssObj[posRef[that.__orientation()].size] = size;
-                    cssObj[posRef[that.__orientation()].nonsize] = "100%";
-                    cssObj[posRef[that.__orientation()].position] = offset + (size * index);
-                    cssObj[posRef[that.__orientation()].nonposition] = 0;
+                    cssObj[posRef[that.orientation()].size] = size;
+                    cssObj[posRef[that.orientation()].nonsize] = "100%";
+                    cssObj[posRef[that.orientation()].position] = offset + (size * index);
+                    cssObj[posRef[that.orientation()].nonposition] = 0;
                     $(this).css(cssObj);
                 });
             }
         }, DC.options.daysOptions);
-        
+
         $(container).on("activitiesChanged", $.proxy(DC.renderActivities, DC));
 
         return DC;
@@ -355,12 +373,12 @@ var TimeTable = function(options, container) {
             activityMargin: 0,
             activityObj: $("<div/>", {"class": "tt-event", style: "position: relative; display: none;", "tabindex": 0}),
             _init: function() {
-                
+
                 var start = this.startTime.split(":");
 
                 this.dow = parseInt(this.scheduledDay);
-                this.hour = parseInt(start[0],10);
-                this.minute = parseInt(start[1],10);
+                this.hour = parseInt(start[0], 10);
+                this.minute = parseInt(start[1], 10);
 
                 var changed = false;
                 if (this.hour < this.options.startHour) {
@@ -387,18 +405,16 @@ var TimeTable = function(options, container) {
                 } else {
                     this.resize();
                 }
-                
+
                 this._setColour();
-                $(this.container).on("activityAdded", $.proxy(this._onActivityAdded,this));
-                
+                $(this.container).on("activityAdded", $.proxy(this._onActivityAdded, this));
+
             },
             overlaps: new Array(),
-
             addOverlap: function(overlap) {
                 this.overlaps.push(overlap);
             },
-
-            _onActivityAdded : function(event) {
+            _onActivityAdded: function(event) {
                 if (this.overlapWith(event.activity)) {
                     this.negotiatePosition(event.activity);
                     this.addOverlap(event.activity);
@@ -407,61 +423,62 @@ var TimeTable = function(options, container) {
                 this.container.trigger("tt.event.update");
             },
             overlapWith: function(activity) {
-                var thisTime = (this.hour*60) + this.minute;
-                var thatTime = (activity.hour*60) + activity.minute;
+                var thisTime = (this.hour * 60) + this.minute;
+                var thatTime = (activity.hour * 60) + activity.minute;
                 if (
-                        (thisTime >= thatTime && thisTime < thatTime+activity.duration) ||
-                        (thatTime >= thisTime && thatTime < thisTime+this.duration)    
-                )
-                        return true;
+                        (thisTime >= thatTime && thisTime < thatTime + activity.duration) ||
+                        (thatTime >= thisTime && thatTime < thisTime + this.duration)
+                        )
+                    return true;
             },
             negotiatePosition: function(activity) {
-                    if (activity.sizeFactor < this.sizeFactor) {
-                        activity.sizeFactor++;
-                    } else if (activity.sizeFactor > this.sizeFactor) {
-                        this.sizeFactor++;
-                    } else {
-                        activity.sizeFactor++;
-                        this.sizeFactor++;
-                    }
-            
-                        var positions = new Array();
-                        positions.push(this.position);
-                        $.each(activity.overlaps, function (index, overlap) {
-                            positions.push(overlap.position);
-                        });
-                        while ($.inArray(activity.position, positions) != -1)
-                            activity.position++;
+                if (activity.sizeFactor < this.sizeFactor) {
+                    activity.sizeFactor++;
+                } else if (activity.sizeFactor > this.sizeFactor) {
+                    this.sizeFactor++;
+                } else {
+                    activity.sizeFactor++;
+                    this.sizeFactor++;
+                }
 
-                    
+                var positions = new Array();
+                positions.push(this.position);
+                $.each(activity.overlaps, function(index, overlap) {
+                    positions.push(overlap.position);
+                });
+                while ($.inArray(activity.position, positions) != - 1)
+                    activity.position++;
+
+
             },
             position: 0,
             sizeFactor: 1,
-
             content: function() {
-                return this.title + "<br />" + this.hour + ":" + this.minute   + " - " + this.duration + " Minutes";
+                return this.title + "<br />" + this.hour + ":" + this.minute + " - " + this.duration + " Minutes";
             },
             _setColour: function() {
                 var baseColour = this.activityObj.css("background-color");
-                if (this.color) baseColour = this.color;
-                if (this.colour) baseColour = this.colour;
-                
+                if (this.color)
+                    baseColour = this.color;
+                if (this.colour)
+                    baseColour = this.colour;
+
                 this.activityObj.css({"background-color": baseColour});
                 if ($.isFunction($.Color)) {
-                    
+
                     var startColour = $.Color(baseColour);
                     var lightness = startColour.lightness();
-                    var change = lightness/4;
-                    var endColour = startColour.lightness("-="+change);
-                    
+                    var change = lightness / 4;
+                    var endColour = startColour.lightness("-=" + change);
+
                     var css = {
-                        background: 'linear-gradient(120deg, '+startColour.toHexString()+' 30%, '+endColour.toHexString() +' 70%)'
+                        background: 'linear-gradient(120deg, ' + startColour.toHexString() + ' 30%, ' + endColour.toHexString() + ' 70%)'
                     }
-                    
+
                     this.activityObj.css(css);
-                    
+
                 }
-                
+
             },
             _attach: function() {
                 var content = "";
@@ -482,17 +499,16 @@ var TimeTable = function(options, container) {
                 this.activityObj.fadeOut("slow").remove();
                 $(this.container).off("activityAdded", this._onActivityAdded);
             },
-
             resize: function() {
                 var dayIndex = this.dow - this.options.startDay;
-                var hourIndex = this.hour - this.options.startHour + 1;
+                var hourIndex = this.hour - this.options.startHour;// + 1;
                 var hourOffset = (this.options.hourSize / 60) * this.minute;
 
                 var cssObj = {
                     position: "absolute"
                 };
-        
-                
+
+
                 var expandto = {
                     position: 1000000,
                     sizeFactor: 0
@@ -500,79 +516,79 @@ var TimeTable = function(options, container) {
                 $.each(this.overlaps, $.proxy(function(index, activity) {
                     if (activity.position > this.position && activity.position <= expandto.position && activity.sizeFactor >= expandto.sizeFactor)
                         expandto = activity;
-                },this));
+                }, this));
 
                 //var activityWidth = this.options.daySize / (this.sizeFactor + (this.sizeFactor*sf));
                 var activityWidth = (this.options.daySize) / (this.sizeFactor);
-                
-                cssObj[posRef[this.__orientation()].hour] = (hourIndex * this.options.hourSize) + hourOffset;
-                cssObj[posRef[this.__orientation()].day] = (activityWidth*this.position)+this.activityMargin;// 0;//(dayIndex * this.options.daySize) + (this.options.daySize * 0.1);
-                cssObj[posRef[this.__orientation()].size] = this.duration * (this.options.hourSize / 60)- this.activityMargin;
-                if (expandto.sizeFactor > 0 && (activityWidth*this.position + activityWidth) != ((this.options.daySize/expandto.sizeFactor) * expandto.position )) {
-                    activityWidth += ((this.options.daySize/expandto.sizeFactor) * expandto.position ) - (activityWidth*this.position + activityWidth);
-                    cssObj[posRef[this.__orientation()].nonsize] = activityWidth - this.activityMargin -1;//"100%";//this.options.daySize * 0.8;
+
+                cssObj[posRef[this.orientation()].hour] = (hourIndex * this.options.hourSize) + hourOffset + this.options.titleSize;
+                cssObj[posRef[this.orientation()].day] = (activityWidth * this.position) + this.activityMargin;// 0;//(dayIndex * this.options.daySize) + (this.options.daySize * 0.1);
+                cssObj[posRef[this.orientation()].size] = this.duration * (this.options.hourSize / 60) - this.activityMargin;
+                if (expandto.sizeFactor > 0 && (activityWidth * this.position + activityWidth) != ((this.options.daySize / expandto.sizeFactor) * expandto.position)) {
+                    activityWidth += ((this.options.daySize / expandto.sizeFactor) * expandto.position) - (activityWidth * this.position + activityWidth);
+                    cssObj[posRef[this.orientation()].nonsize] = activityWidth - this.activityMargin - 1;//"100%";//this.options.daySize * 0.8;
                 } else
-                    cssObj[posRef[this.__orientation()].nonsize] = activityWidth - (this.activityMargin*2) -1;//"100%";//this.options.daySize * 0.8;
-                
+                    cssObj[posRef[this.orientation()].nonsize] = activityWidth - (this.activityMargin * 2) - 1;//"100%";//this.options.daySize * 0.8;
+
 
                 this.activityObj.css(cssObj);
                 var content = $.proxy(this.content, this);
-                    this.activityObj.html(content());
-                
+                this.activityObj.html(content());
+
             },
             events: {
-                "focus mouseenter": function(){
-                         var content = (this.activityObj) ? this.activityObj : this;
-                         if (content.expanded != true) {
-                             content.expanded = true;
-                            var position  = $(content).position();
-                            content.oldH = $(content).height();
-                            content.oldW = $(content).width();
-                            content.oldT = position.top;
-                            content.oldL = position.left;
-                            this.to = setTimeout(function () {
-                                var css = {};
-                                $(content).css({
-                                       "z-index": 1000,
-                                       "box-shadow": "0 6px 10px rgba(0,0,0,0.75)"
-                                });
-                                var width = Math.max(content.scrollWidth, defaultOptions.ActivityOptions.mouseoverMinWidth) + 5;
-                                var height = Math.max(content.scrollHeight, defaultOptions.ActivityOptions.mouseoverMinHeight);
-                                var diffH = height - content.oldH;
-                                var diffW = width - content.oldW;
-                                if(diffH > 0) {
-                                    css['top'] = "-="+diffH/2;
-                                    css['height'] = "+="+diffH;
-                                }
-                                if (diffW > 0) {
-                                    css['left'] = "-="+diffW/2;
-                                    css['width'] = "+="+diffW;
-                                }
+                "focus mouseenter": function() {
+                    var content = (this.activityObj) ? this.activityObj : this;
+                    if (content.expanded != true) {
+                        content.expanded = true;
+                        var position = $(content).position();
+                        content.oldH = $(content).height();
+                        content.oldW = $(content).width();
+                        content.oldT = position.top;
+                        content.oldL = position.left;
+                        this.to = setTimeout(function() {
+                            var css = {};
+                            $(content).css({
+                                "z-index": 1000,
+                                "box-shadow": "0 6px 10px rgba(0,0,0,0.75)"
+                            });
+                            var width = Math.max(content.scrollWidth, defaultOptions.ActivityOptions.mouseoverMinWidth) + 5;
+                            var height = Math.max(content.scrollHeight, defaultOptions.ActivityOptions.mouseoverMinHeight);
+                            var diffH = height - content.oldH;
+                            var diffW = width - content.oldW;
+                            if (diffH > 0) {
+                                css['top'] = "-=" + diffH / 2;
+                                css['height'] = "+=" + diffH;
+                            }
+                            if (diffW > 0) {
+                                css['left'] = "-=" + diffW / 2;
+                                css['width'] = "+=" + diffW;
+                            }
 
-                                   $(content).animate(css, defaultOptions.ActivityOptions.mouseoverSpeed, defaultOptions.ActivityOptions.mouseoverEasing);
+                            $(content).animate(css, defaultOptions.ActivityOptions.mouseoverSpeed, defaultOptions.ActivityOptions.mouseoverEasing);
 
-                            }, defaultOptions.ActivityOptions.mouseoverDelay);
-                        }
+                        }, defaultOptions.ActivityOptions.mouseoverDelay);
+                    }
                 },
                 "blur mouseleave": function() {
-                         clearTimeout(this.to);
-                         if (this.expanded == true) {
-                             this.expanded = false;
-                         $(this).css({
-                                    "z-index": 0,
-                                    "box-shadow": "none"
-                             });
+                    clearTimeout(this.to);
+                    if (this.expanded == true) {
+                        this.expanded = false;
+                        $(this).css({
+                            "z-index": 0,
+                            "box-shadow": "none"
+                        });
 
-                            $(this).animate({width: this.oldW, height: this.oldH, top: this.oldT, left: this.oldL, "z-index":0}, defaultOptions.ActivityOptions.mouseoverSpeed, defaultOptions.ActivityOptions.mouseoverEasing);
+                        $(this).animate({width: this.oldW, height: this.oldH, top: this.oldT, left: this.oldL, "z-index": 0}, defaultOptions.ActivityOptions.mouseoverSpeed, defaultOptions.ActivityOptions.mouseoverEasing);
 
-                         }
+                    }
                 }
             }
 
 
         }, A.options.ActivityOptions, data);
-        
-        
+
+
 
         $(container).on("tt.event.update", $.proxy(function() {
             this.resize()
@@ -584,9 +600,9 @@ var TimeTable = function(options, container) {
         });
 
         A._init();
-        
+
         $(A.activityObj).on(A.events);
-        
+
         return A;
     };
 
@@ -604,7 +620,7 @@ var TimeTable = function(options, container) {
     $(container).on("tt.update", $.proxy(function(event) {
         this.hoursContainer.render();
         this.daysContainer.render();
-        
+
         //this.activityContainer.resize();
         $(container).trigger("tt.container.updated");
         event.stopPropagation();
