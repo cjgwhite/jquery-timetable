@@ -13,6 +13,7 @@ var TimeTable = function(options, container) {
         endDay: 5,
         activities: [],
         titleSize: 75,
+        NoContentMsg: "No Activities to Display",
         hoursOptions: {
             events: {}
         },
@@ -74,6 +75,7 @@ var TimeTable = function(options, container) {
                 {
                     hoursContainer: new HoursContainer(),
                     daysContainer: new DaysContainer(),
+                    noContentOverlay: new NoContentOverlay(),
                     name: "timetable",
                     _create: function() {
                         var cssObj = {
@@ -82,10 +84,14 @@ var TimeTable = function(options, container) {
                         $(this.container)
                                 .addClass("tt-container")
                                 .css(cssObj);
+                        if (this.isMobile()) {
+                            $(this.container).addClass("tt-mobile");
+                        }
                     },
                     _init: function() {
                         this.hoursContainer.init();
                         this.daysContainer.init();
+                        this.noContentOverlay.init();
                         this.resize();
                     },
                     option: function(key, value) {
@@ -119,8 +125,8 @@ var TimeTable = function(options, container) {
                         if (typeof activityList !== 'undefined') {
                             this.options.activities = activityList;
                         }
+                            this.daysContainer.renderActivities();
 
-                        this.daysContainer.renderActivities();
 
                     },
                     refresh: function() {
@@ -175,7 +181,8 @@ var TimeTable = function(options, container) {
                 this.resize();
             },
             resize: function() {
-                this.options.hourSize = (parseInt(this.container.css(posRef[this.orientation()].size)) - this.options.titleSize) / (this.hour);
+//                this.options.hourSize = (parseInt(this.container.css(posRef[this.orientation()].size)) - this.options.titleSize) / (this.hour);
+                this.options.hourSize = (parseInt(this.container[posRef[this.orientation()].size]()) - this.options.titleSize) / (this.hour);
                 this.options.hourNumber = this.hour;
 
                 if (this.options['minHourSize'] != null && this.options.hourSize < this.options.minHourSize) {
@@ -239,7 +246,7 @@ var TimeTable = function(options, container) {
                 this.days = this._generateDays();
                 var now = new Date();
                 var today = now.getDay();
-                if (today < this.options.endDay || today > this.options.startDay) {
+                if (today > this.options.endDay || today < this.options.startDay) {
                     this.viewDay = this.options.startDay;
                 } else {
                     this.viewDay = today;
@@ -282,27 +289,60 @@ var TimeTable = function(options, container) {
                 this.resize();
             },
             daysActivities: new Array(),
+            defaultAjax: {
+//                success: $.proxy(function (activities, status, xhr) {
+//                    this.__populateActivities(activities);
+//                }, DC)
+            },
+            ajaxOn: null,
             renderActivities: function() {
-                $('.tt-event', this.container).remove();
+        
+                if (this.ajaxOn !== null) {
+                    this.ajaxOn.abort();
+                }
+                $('.tt-activity', this.container).fadeOut().remove();
 
                 $.each(this.daysActivities, function(index, activity) {
                     activity.remove();
                     delete activity;
                 });
 
-                var activities = [];
+                
                 if ($.isFunction(this.options.activities)) {
-                    activities = this.options.activities();
+                    this.__populateActivities(this.options.activities());
+                } else if ($.isPlainObject(this.options.activities)) {
+                    
+                    var ajaxSettings = $.extend(this.options.activities, this.defaultAjax);
+                    this.ajaxOn = $.ajax(ajaxSettings);
+                    
+                } else if ($.isArray(this.options.activities)) {
+                    this.__populateActivities(this.options.activities);
                 } else {
-                    activities = this.options.activities;
+                    this.ajaxOn = $.ajax(this.options.activities, this.defaultAjax);
                 }
+                
+                if (this.ajaxOn !== null) {
+                    
+                    this.ajaxOn.done($.proxy(this.__populateActivities, this));
+                    
+                }
+                
+                
+            },
+            __populateActivities: function(activities) {
+            
+                if (activities.length > 0) {
+//                    $(container).trigger("tt-activitiesChanged");
+                        $.each(activities, $.proxy(function(index, activityData) {
 
-                $.each(activities, $.proxy(function(index, activityData) {
+                            var activity = new Activity(this.days[activityData.scheduledDay], activityData);
 
-                    var activity = new Activity(this.days[activityData.scheduledDay], activityData);
-
-                    this.daysActivities.push(activity);
-                }, this));
+                            this.daysActivities.push(activity);
+                        }, this));
+                        $(container).trigger("tt-activitiesRendered");
+                } else {
+                    $(container).trigger("tt-noActivities");
+                }
             },
             addActivity: function(activity) {
                 var day = this.days[activity.dow];
@@ -311,13 +351,14 @@ var TimeTable = function(options, container) {
             },
             resize: function() {
 
-                this.options.daySize = (parseInt(this.container.css(posRef[this.orientation()].size)) - this.options.titleSize) / this.day;
+//                this.options.daySize = (parseInt(this.container.css(posRef[this.orientation()].size)) - this.options.titleSize) / this.day;
+                this.options.daySize = (parseInt(this.container[posRef[this.orientation()].size]()) - this.options.titleSize) / this.day;
 
                 if (this.options['minDaySize'] != null && this.options.daySize < this.options.minDaySize) {
                     this.options.daySize = this.options.minDaySize;
 
                     var cssObj = {};
-                    cssObj[posRef[this.orientation()].size] = (this.options.daySize * this.day + 1) + this.options.titleSize;
+                    cssObj[posRef[this.orientation()].size] = (this.options.daySize * this.day ) + this.options.titleSize;
                     this.container.css(cssObj);
 
                 }
@@ -341,7 +382,7 @@ var TimeTable = function(options, container) {
             }
         }, DC.options.daysOptions);
 
-        $(container).on("activitiesChanged", $.proxy(DC.renderActivities, DC));
+        $(container).on("tt-activitiesChanged", $.proxy(DC.renderActivities, DC));
 
         return DC;
     };
@@ -371,7 +412,7 @@ var TimeTable = function(options, container) {
             scheduledDay: 0,
             duration: 60,
             activityMargin: 0,
-            activityObj: $("<div/>", {"class": "tt-event", style: "position: relative; display: none;", "tabindex": 0}),
+            activityObj: $("<div/>", {"class": "tt-activity", style: "position: relative; display: none; overflow: hidden;", "tabindex": 0}),
             _init: function() {
 
                 var start = this.startTime.split(":");
@@ -472,7 +513,7 @@ var TimeTable = function(options, container) {
                     var endColour = startColour.lightness("-=" + change);
 
                     var css = {
-                        background: 'linear-gradient(120deg, ' + startColour.toHexString() + ' 30%, ' + endColour.toHexString() + ' 70%)'
+                        background: 'linear-gradient(127deg, ' + startColour.toHexString() + ' 25%, ' + endColour.toHexString() + ' 100%)'
                     }
 
                     this.activityObj.css(css);
@@ -606,6 +647,75 @@ var TimeTable = function(options, container) {
         return A;
     };
 
+    var NoContentOverlay = function() {
+        var NCO = new OptionsDependant(container);
+
+        $.extend(true, NCO, {
+            overlay: $("<div/>", { "class": "tt-overlay" }).append($("<div/>", {"class":"tt-noContent"}).html("No Activities to display")),
+            init: function() {
+                $(container).append(this.overlay);
+                
+                if ($.isFunction(this.options.NoContentMsg))
+                    $(".tt-noContent", this.overlay).html(this.options.NoContentMsg());
+                else
+                    $(".tt-noContent", this.overlay).html(this.options.NoContentMsg);
+
+                    $(this.overlay).css({
+                        "position": "relative",
+                        "z-index": 1000
+                    });
+
+                $(".tt-noContent", this.overlay).css({
+                    position: "absolute",
+                    opacity: 1
+                    
+                });
+
+            },
+            show: function() {
+                this.resize();
+                this.overlay.fadeIn();
+            },
+            hide: function() {
+                this.overlay.fadeOut();
+            },
+            resize: function() {
+                var width = $(container).width();
+                var height = $(container).height();
+                var top = 0;
+                var left = 0;
+                
+                this.overlay.css({
+                    width: width,
+                    height: height,
+                    top: top,
+                    left: left
+                });
+                
+                var overlayMsg = $(".tt-noContent", this.overlay);
+                overlayMsg.css({
+                    top: ($(container).height()-overlayMsg.height())/2,
+                    left: ($(container).width()-overlayMsg.width())/2
+                    
+                });
+                
+                
+                
+            }
+            
+        });
+        
+        $(container).on("tt-noActivities", function() {
+            NCO.show();
+        });
+        $(container).on("tt.container.updated", function(event) {
+            NCO.resize();
+        });
+        $(container).on("tt-activitiesRendered", function(event){
+            NCO.hide();
+        });
+        return NCO;
+    }
 
     var tt = createTimeTable();
 
@@ -620,16 +730,15 @@ var TimeTable = function(options, container) {
     $(container).on("tt.update", $.proxy(function(event) {
         this.hoursContainer.render();
         this.daysContainer.render();
-
         //this.activityContainer.resize();
         $(container).trigger("tt.container.updated");
         event.stopPropagation();
     }, tt));
-    $(container).on("activitiesChanged", $.proxy(function(evnt) {
+    $(container).on("tt-activitiesChanged", $.proxy(function(evnt) {
         //this.activityContainer.render();
         this.render();
     }, tt));
-
+    
     tt._init();
     tt._create();
     tt.render();
