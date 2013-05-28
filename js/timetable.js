@@ -673,8 +673,8 @@ var TimeTable = function(options, container) {
 
             },
             show: function() {
-                this.resize();
                 this.overlay.fadeIn();
+                this.resize();
             },
             hide: function() {
                 this.overlay.fadeOut();
