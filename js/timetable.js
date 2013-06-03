@@ -717,6 +717,9 @@ var TimeTable = function(options, container) {
         $(container).on("tt-activitiesRendered", function(event){
             NCO.hide();
         });
+        $(document).ajaxStart(function() {
+            NCO.hide();
+        });
         return NCO;
     };
     
