@@ -14,6 +14,7 @@ var TimeTable = function(options, container) {
         activities: [],
         titleSize: 75,
         NoContentMsg: "No Activities to Display",
+        loadingMsg: "Loading...",
         hoursOptions: {
             events: {}
         },
@@ -76,6 +77,7 @@ var TimeTable = function(options, container) {
                     hoursContainer: new HoursContainer(),
                     daysContainer: new DaysContainer(),
                     noContentOverlay: new NoContentOverlay(),
+                    loadingOverlay: new LoadingOverlay(),
                     name: "timetable",
                     _create: function() {
                         var cssObj = {
@@ -92,6 +94,7 @@ var TimeTable = function(options, container) {
                         this.hoursContainer.init();
                         this.daysContainer.init();
                         this.noContentOverlay.init();
+                        this.loadingOverlay.init();
                         this.resize();
                     },
                     option: function(key, value) {
@@ -703,7 +706,7 @@ var TimeTable = function(options, container) {
                 
             }
             
-        });
+        });        
         
         $(container).on("tt-noActivities", function() {
             NCO.show();
@@ -715,7 +718,73 @@ var TimeTable = function(options, container) {
             NCO.hide();
         });
         return NCO;
-    }
+    };
+    
+    var LoadingOverlay = function() {
+        var LO = new OptionsDependant(container);
+
+        $.extend(true, LO, {
+            overlay: $("<div/>", { "class": "tt-overlay" }).append($("<div/>", {"class":"tt-loading"}).html("Loading...")),
+            init: function() {
+                $(container).append(this.overlay);
+                
+                if ($.isFunction(this.options.LoadingMsg))
+                    $(".tt-loading", this.overlay).html(this.options.loadingMsg());
+                else
+                    $(".tt-loading", this.overlay).html(this.options.loadingMsg);
+
+                    $(this.overlay).css({
+                        "position": "relative",
+                        "z-index": 10000
+                    });
+
+                $(".tt-loading", this.overlay).css({
+                    position: "absolute",
+                    opacity: 1
+                    
+                });
+
+            },
+            show: function() {
+                this.overlay.fadeIn();
+                this.resize();
+            },
+            hide: function() {
+                this.overlay.fadeOut();
+            },
+            resize: function() {
+                var width = $(container).width();
+                var height = $(container).height();
+                var top = 0;
+                var left = 0;
+                
+                this.overlay.css({
+                    width: width,
+                    height: height,
+                    top: top,
+                    left: left
+                });
+                
+                var overlayMsg = $(".tt-loading", this.overlay);
+                overlayMsg.css({
+                    top: ($(container).height()-overlayMsg.height())/2,
+                    left: ($(container).width()-overlayMsg.width())/2
+                    
+                });
+            }
+            
+        });
+        
+        $(document).ajaxStart(function() {
+            LO.show();
+        });
+        $(document).ajaxStop(function() {
+            LO.hide();
+        });
+        
+        return LO;
+        
+    };
 
     var tt = createTimeTable();
 
