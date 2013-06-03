@@ -299,9 +299,9 @@ var TimeTable = function(options, container) {
             },
             ajaxOn: null,
             renderActivities: function() {
-        
+                var toabort = false;
                 if (this.ajaxOn !== null) {
-                    this.ajaxOn.abort();
+                    toabort = this.ajaxOn;
                 }
                 $('.tt-activity', this.container).fadeOut().remove();
 
@@ -314,16 +314,15 @@ var TimeTable = function(options, container) {
                 if ($.isFunction(this.options.activities)) {
                     this.__populateActivities(this.options.activities());
                 } else if ($.isPlainObject(this.options.activities)) {
-                    
                     var ajaxSettings = $.extend(this.options.activities, this.defaultAjax);
                     this.ajaxOn = $.ajax(ajaxSettings);
-                    
                 } else if ($.isArray(this.options.activities)) {
                     this.__populateActivities(this.options.activities);
                 } else {
                     this.ajaxOn = $.ajax(this.options.activities, this.defaultAjax);
                 }
                 
+                if (toabort) toabort.abort();
                 if (this.ajaxOn !== null) {
                     
                     this.ajaxOn.done($.proxy(this.__populateActivities, this));
