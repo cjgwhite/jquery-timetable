@@ -296,6 +296,12 @@ var TimeTable = function(options, container) {
             },
             daysActivities: new Array(),
             defaultAjax: {
+                  beforeSend: $.proxy(function() {
+                      this.container.trigger("tt-activitiesLoading");
+                  }, DC),
+                  success: $.proxy(function() {
+                      this.container.trigger("tt-activitiesLoaded");
+                  }, DC)
 //                success: $.proxy(function (activities, status, xhr) {
 //                    this.__populateActivities(activities);
 //                }, DC)
@@ -719,9 +725,10 @@ var TimeTable = function(options, container) {
         $(container).on("tt-activitiesRendered", function(event){
             NCO.hide();
         });
-        $(document).ajaxStart(function() {
+        $(container).on("tt-activitiesLoading", function(event){
             NCO.hide();
         });
+        
         return NCO;
     };
     
@@ -780,10 +787,10 @@ var TimeTable = function(options, container) {
             
         });
         
-        $(document).ajaxStart(function() {
+        $(container).on("tt-activitiesLoading", function(event){
             LO.show();
         });
-        $(document).ajaxStop(function() {
+        $(container).on("tt-activitiesLoaded", function(event){
             LO.hide();
         });
         
