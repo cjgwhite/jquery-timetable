@@ -1,5 +1,8 @@
+var localjQuery = jQuery;
 var TimeTable = function(options, container) {
 
+    var $ = localjQuery;
+    
     var defaultOptions = {
         orientation: "landscape",
         dayView: false,
