@@ -5,7 +5,7 @@
             orientation: "landscape",
             dayView: false,
             dayViewThreshold: 300,
-            dayViewChangeEvent: "click swipe",
+            dayViewChangeEvent: "click swiperight swipeleft",
             minHourSize: 50,
             minDaySize: 50,
             startHour: 9,
@@ -386,8 +386,43 @@
                         cssObj[posRef[that.orientation()].nonsize] = "100%";
                         cssObj[posRef[that.orientation()].position] = offset + (size * index);
                         cssObj[posRef[that.orientation()].nonposition] = 0;
-                        $(this).css(cssObj);
+                        $(this).css(cssObj);                        
                     });
+                    
+                     //scale and position label
+                        var titlePos = {
+                            position: "absolute",
+                            "text-align": "center"
+                        };
+                        
+                        titlePos[posRef[that.orientation()].size] = "100%";
+                        titlePos[posRef[that.orientation()].nonsize] = this.options.titleSize;
+                        var hidden = $("<span/>", {style: "visibility:hidden;width:auto;height:auto;font-size:5px;"});
+                        hidden.text(this.dayNames[this.lang][0]);
+                        $(this.container).append(hidden);
+                        var hiddenSize = {
+                            "width": hidden.width(),
+                            "height": hidden.height()
+                        };
+                        while( hiddenSize[posRef[that.orientation()].size] < size/2 && hiddenSize[posRef[that.orientation()].nonsize] < this.options.titleSize/2 ) {
+                           var fs = parseInt(hidden.css("font-size"), 10);
+                           hidden.css({
+                               "font-size" : (fs+1) + "px"
+                           });
+                           hiddenSize.width = hidden.width();
+                           hiddenSize.height = hidden.height();
+                       }
+                       titlePos["font-size"] = hidden.css("font-size");
+                        
+                        hidden.remove();
+                        
+                    $('div.tt-dayTitle', this.container).each(function(index, el) {
+                       $(this).css(titlePos);
+                       $(this).css({
+                           "line-height": $(this).height() + "px"
+                       });
+                    });
+                    
                 }
             }, DC.options.daysOptions);
 
