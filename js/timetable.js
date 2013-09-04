@@ -185,7 +185,6 @@
                     this.resize();
                 },
                 resize: function() {
-    //                settings.hourSize = (parseInt(this.container.css(posRef[this.orientation()].size)) - settings.titleSize) / (this.hour);
                     settings.hourSize = (parseInt(this.container[posRef[this.orientation()].size]()) - settings.titleSize) / (this.hour);
                     settings.hourNumber = this.hour;
 
@@ -280,8 +279,6 @@
                     ];
                 },
                 render: function() {
-    //                $('.tt-day', this.container).remove();
-
                     if (this.isDayView()) {
                         $('.tt-day', this.container).remove();
                         this.container.append(this.days[this.viewDay].one(settings.dayViewChangeEvent, this.__dayChange));
@@ -300,9 +297,6 @@
                       success: $.proxy(function() {
                           this.container.trigger("tt-activitiesLoaded");
                       }, DC)
-    //                success: $.proxy(function (activities, status, xhr) {
-    //                    this.__populateActivities(activities);
-    //                }, DC)
                 },
                 ajaxOn: null,
                 renderActivities: function() {
@@ -341,7 +335,6 @@
                 __populateActivities: function(activities) {
 
                     if (activities.length > 0) {
-    //                    $(container).trigger("tt-activitiesChanged");
                             $.each(activities, $.proxy(function(index, activityData) {
 
                                 var activity = new Activity(this.days[activityData.scheduledDay], activityData);
@@ -359,8 +352,6 @@
                     activity._attach();
                 },
                 resize: function() {
-
-    //                settings.daySize = (parseInt(this.container.css(posRef[this.orientation()].size)) - settings.titleSize) / this.day;
                     settings.daySize = (parseInt(this.container[posRef[this.orientation()].size]()) - settings.titleSize) / this.day;
 
                     if (settings['minDaySize'] != null && settings.daySize < settings.minDaySize) {
@@ -389,7 +380,6 @@
                         $(this).css(cssObj);                        
                     });
                     
-                     //scale and position label
                         var titlePos = {
                             position: "absolute",
                             "text-align": "center"
@@ -586,7 +576,7 @@
                 },
                 resize: function() {
                     var dayIndex = this.dow - settings.startDay;
-                    var hourIndex = this.hour - settings.startHour;// + 1;
+                    var hourIndex = this.hour - settings.startHour;
                     var hourOffset = (settings.hourSize / 60) * this.minute;
 
                     var cssObj = {
@@ -604,7 +594,6 @@
                         }
                     }, this));
 
-                    //var activityWidth = settings.daySize / (this.sizeFactor + (this.sizeFactor*sf));
                     var activityWidth = (settings.daySize) / (this.sizeFactor);
 
                     cssObj[posRef[this.orientation()].hour] = (hourIndex * settings.hourSize) + hourOffset + settings.titleSize;
@@ -845,12 +834,10 @@
         $(container).on("tt.update", $.proxy(function(event) {
             this.hoursContainer.render();
             this.daysContainer.render();
-            //this.activityContainer.resize();
             $(container).trigger("tt.container.updated");
             event.stopPropagation();
         }, tt));
         $(container).on("tt-activitiesChanged", $.proxy(function(evnt) {
-            //this.activityContainer.render();
             this.render();
         }, tt));
 
