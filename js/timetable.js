@@ -689,11 +689,6 @@
                     
                     $(container).append(this.overlay);
 
-                    if ($.isFunction(settings.NoContentMsg))
-                        $(".tt-message", this.overlay).html(settings.NoContentMsg());
-                    else
-                        $(".tt-message", this.overlay).html(settings.NoContentMsg);
-
                     $(this.overlay).css({
                         "position": "relative",
                         "z-index": 1000
@@ -738,7 +733,7 @@
             
             
             $(container).on("tt-noActivities", function() {
-                MO.show("No Activities to Display");
+                MO.show($.isFunction(settings.NoContentMsg) ? settings.NoContentMsg() : settings.NoContentMsg);
             });
             $(container).on("tt.container.updated", function(event) {
                 MO.resize();
@@ -747,7 +742,7 @@
                 MO.hide();
             });
             $(container).on("tt-activitiesLoading", function(event) {
-                MO.show("Loading...");
+                MO.show($.isFunction(settings.loadingMsg) ? settings.loadingMsg() : settings.loadingMsg);
             });
             $(container).on("tt-activitiesLoaded", function(event) {
                 MO.hide();
