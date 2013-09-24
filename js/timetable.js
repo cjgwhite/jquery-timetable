@@ -1,4 +1,4 @@
-(function($){
+(function($) {
     var TimeTable = function(options, container) {
 
         var defaultOptions = {
@@ -35,9 +35,9 @@
         var OptionsDependant = function(container) {
             this.container = $(container);
         };
-        
-        var settings = $.extend(true,defaultOptions,options);
-        
+
+        var settings = $.extend(true, defaultOptions, options);
+
         OptionsDependant.prototype = {
             orientation: function() {
 
@@ -67,8 +67,8 @@
                 }
             }
         };
-        
-        
+
+
 
         function createTimeTable() {
             return $.extend(
@@ -77,8 +77,7 @@
                     {
                         hoursContainer: new HoursContainer(),
                         daysContainer: new DaysContainer(),
-                        noContentOverlay: new NoContentOverlay(),
-                        loadingOverlay: new LoadingOverlay(),
+                        messageOverlay: new MessageOverlay(),
                         name: "timetable",
                         _create: function() {
                             var cssObj = {
@@ -94,8 +93,7 @@
                         _init: function() {
                             this.hoursContainer.init();
                             this.daysContainer.init();
-                            this.noContentOverlay.init();
-                            this.loadingOverlay.init();
+                            this.messageOverlay.init();
                             this.resize();
                         },
                         option: function(key, value) {
@@ -129,7 +127,7 @@
                             if (typeof activityList !== 'undefined') {
                                 settings.activities = activityList;
                             }
-                                this.daysContainer.renderActivities();
+                            this.daysContainer.renderActivities();
 
 
                         },
@@ -291,12 +289,12 @@
                 },
                 daysActivities: new Array(),
                 defaultAjax: {
-                      beforeSend: $.proxy(function() {
-                          this.container.trigger("tt-activitiesLoading");
-                      }, DC),
-                      success: $.proxy(function() {
-                          this.container.trigger("tt-activitiesLoaded");
-                      }, DC)
+                    beforeSend: $.proxy(function() {
+                        this.container.trigger("tt-activitiesLoading");
+                    }, DC),
+                    success: $.proxy(function() {
+                        this.container.trigger("tt-activitiesLoaded");
+                    }, DC)
                 },
                 ajaxOn: null,
                 renderActivities: function() {
@@ -323,7 +321,8 @@
                         this.ajaxOn = $.ajax(settings.activities, this.defaultAjax);
                     }
 
-                    if (toabort) toabort.abort();
+                    if (toabort)
+                        toabort.abort();
                     if (this.ajaxOn !== null) {
 
                         this.ajaxOn.done($.proxy(this.__populateActivities, this));
@@ -335,13 +334,13 @@
                 __populateActivities: function(activities) {
 
                     if (activities.length > 0) {
-                            $.each(activities, $.proxy(function(index, activityData) {
+                        $.each(activities, $.proxy(function(index, activityData) {
 
-                                var activity = new Activity(this.days[activityData.scheduledDay], activityData);
+                            var activity = new Activity(this.days[activityData.scheduledDay], activityData);
 
-                                this.daysActivities.push(activity);
-                            }, this));
-                            $(container).trigger("tt-activitiesRendered");
+                            this.daysActivities.push(activity);
+                        }, this));
+                        $(container).trigger("tt-activitiesRendered");
                     } else {
                         $(container).trigger("tt-noActivities");
                     }
@@ -358,7 +357,7 @@
                         settings.daySize = settings.minDaySize;
 
                         var cssObj = {};
-                        cssObj[posRef[this.orientation()].size] = (settings.daySize * this.day ) + settings.titleSize;
+                        cssObj[posRef[this.orientation()].size] = (settings.daySize * this.day) + settings.titleSize;
                         this.container.css(cssObj);
 
                     }
@@ -377,42 +376,42 @@
                         cssObj[posRef[that.orientation()].nonsize] = "100%";
                         cssObj[posRef[that.orientation()].position] = offset + (size * index);
                         cssObj[posRef[that.orientation()].nonposition] = 0;
-                        $(this).css(cssObj);                        
+                        $(this).css(cssObj);
                     });
-                    
-                        var titlePos = {
-                            position: "absolute",
-                            "text-align": "center"
-                        };
-                        
-                        titlePos[posRef[that.orientation()].size] = "100%";
-                        titlePos[posRef[that.orientation()].nonsize] = settings.titleSize;
-                        var hidden = $("<span/>", {style: "visibility:hidden;width:auto;height:auto;font-size:5px;"});
-                        hidden.text(this.dayNames[this.lang][0]);
-                        $(this.container).append(hidden);
-                        var hiddenSize = {
-                            "width": hidden.width(),
-                            "height": hidden.height()
-                        };
-                        while( hiddenSize[posRef[that.orientation()].size] < size/2 && hiddenSize[posRef[that.orientation()].nonsize] < settings.titleSize/2 ) {
-                           var fs = parseInt(hidden.css("font-size"), 10);
-                           hidden.css({
-                               "font-size" : (fs+1) + "px"
-                           });
-                           hiddenSize.width = hidden.width();
-                           hiddenSize.height = hidden.height();
-                       }
-                       titlePos["font-size"] = hidden.css("font-size");
-                        
-                        hidden.remove();
-                        
+
+                    var titlePos = {
+                        position: "absolute",
+                        "text-align": "center"
+                    };
+
+                    titlePos[posRef[that.orientation()].size] = "100%";
+                    titlePos[posRef[that.orientation()].nonsize] = settings.titleSize;
+                    var hidden = $("<span/>", {style: "visibility:hidden;width:auto;height:auto;font-size:5px;"});
+                    hidden.text(this.dayNames[this.lang][0]);
+                    $(this.container).append(hidden);
+                    var hiddenSize = {
+                        "width": hidden.width(),
+                        "height": hidden.height()
+                    };
+                    while (hiddenSize[posRef[that.orientation()].size] < size / 2 && hiddenSize[posRef[that.orientation()].nonsize] < settings.titleSize / 2) {
+                        var fs = parseInt(hidden.css("font-size"), 10);
+                        hidden.css({
+                            "font-size": (fs + 1) + "px"
+                        });
+                        hiddenSize.width = hidden.width();
+                        hiddenSize.height = hidden.height();
+                    }
+                    titlePos["font-size"] = hidden.css("font-size");
+
+                    hidden.remove();
+
                     $('div.tt-dayTitle', this.container).each(function(index, el) {
-                       $(this).css(titlePos);
-                       $(this).css({
-                           "line-height": $(this).height() + "px"
-                       });
+                        $(this).css(titlePos);
+                        $(this).css({
+                            "line-height": $(this).height() + "px"
+                        });
                     });
-                    
+
                 }
             }, settings.daysOptions);
 
@@ -538,7 +537,7 @@
                     if (this.colour)
                         baseColour = this.colour;
 
-                    
+
                     if ($.isFunction($.Color)) {
 
                         var startColour = $.Color(baseColour);
@@ -681,32 +680,33 @@
             return A;
         };
 
-        var NoContentOverlay = function() {
-            var NCO = new OptionsDependant(container);
+        var MessageOverlay = function() {
+            var MO = new OptionsDependant(container);
 
-            $.extend(true, NCO, {
-                overlay: $("<div/>", { "class": "tt-overlay" }).append($("<div/>", {"class":"tt-noContent"}).html("No Activities to display")),
+            $.extend(true, MO, {
+                overlay: $("<div/>", {"class": "tt-overlay", style: "display: none;"}).append($("<div/>", {"class": "tt-message"}).html("No Message")),
                 init: function() {
+                    
                     $(container).append(this.overlay);
 
                     if ($.isFunction(settings.NoContentMsg))
-                        $(".tt-noContent", this.overlay).html(settings.NoContentMsg());
+                        $(".tt-message", this.overlay).html(settings.NoContentMsg());
                     else
-                        $(".tt-noContent", this.overlay).html(settings.NoContentMsg);
+                        $(".tt-message", this.overlay).html(settings.NoContentMsg);
 
-                        $(this.overlay).css({
-                            "position": "relative",
-                            "z-index": 1000
-                        });
+                    $(this.overlay).css({
+                        "position": "relative",
+                        "z-index": 1000
+                    });
 
-                    $(".tt-noContent", this.overlay).css({
+                    $(".tt-message", this.overlay).css({
                         position: "absolute",
                         opacity: 1
 
                     });
-
                 },
-                show: function() {
+                show: function(message) {
+                    $('.tt-message', this.overlay).html(message);
                     this.overlay.fadeIn();
                     this.resize();
                 },
@@ -726,100 +726,39 @@
                         left: left
                     });
 
-                    var overlayMsg = $(".tt-noContent", this.overlay);
+                    var overlayMsg = $(".tt-message", this.overlay);
                     overlayMsg.css({
-                        top: ($(container).height()-overlayMsg.height())/2,
-                        left: ($(container).width()-overlayMsg.width())/2
+                        top: ($(container).height() - overlayMsg.height()) / 2,
+                        left: ($(container).width() - overlayMsg.width()) / 2
 
                     });
-
-
-
                 }
-
             });
-
+            
+            
+            
             $(container).on("tt-noActivities", function() {
-                NCO.show();
+                MO.show("No Activities to Display");
             });
             $(container).on("tt.container.updated", function(event) {
-                NCO.resize();
+                MO.resize();
             });
-            $(container).on("tt-activitiesRendered", function(event){
-                NCO.hide();
+            $(container).on("tt-activitiesRendered", function(event) {
+                MO.hide();
             });
-            $(container).on("tt-activitiesLoading", function(event){
-                NCO.hide();
+            $(container).on("tt-activitiesLoading", function(event) {
+                MO.show("Loading...");
             });
-
-            return NCO;
-        };
-
-        var LoadingOverlay = function() {
-            var LO = new OptionsDependant(container);
-
-            $.extend(true, LO, {
-                overlay: $("<div/>", { "class": "tt-overlay" }).append($("<div/>", {"class":"tt-loading"}).html("Loading...")),
-                init: function() {
-                    $(container).append(this.overlay);
-
-                    if ($.isFunction(settings.LoadingMsg))
-                        $(".tt-loading", this.overlay).html(settings.loadingMsg());
-                    else
-                        $(".tt-loading", this.overlay).html(settings.loadingMsg);
-
-                        $(this.overlay).css({
-                            "position": "relative",
-                            "z-index": 10000
-                        });
-
-                    $(".tt-loading", this.overlay).css({
-                        position: "absolute",
-                        opacity: 1
-
-                    });
-
-                },
-                show: function() {
-                    this.overlay.fadeIn();
-                    this.resize();
-                },
-                hide: function() {
-                    this.overlay.fadeOut();
-                },
-                resize: function() {
-                    var width = $(container).width();
-                    var height = $(container).height();
-                    var top = 0;
-                    var left = 0;
-
-                    this.overlay.css({
-                        width: width,
-                        height: height,
-                        top: top,
-                        left: left
-                    });
-
-                    var overlayMsg = $(".tt-loading", this.overlay);
-                    overlayMsg.css({
-                        top: ($(container).height()-overlayMsg.height())/2,
-                        left: ($(container).width()-overlayMsg.width())/2
-
-                    });
-                }
-
+            $(container).on("tt-activitiesLoaded", function(event) {
+                MO.hide();
             });
+        
+            return MO;
+        }
 
-            $(container).on("tt-activitiesLoading", function(event){
-                LO.show();
-            });
-            $(container).on("tt-activitiesLoaded", function(event){
-                LO.hide();
-            });
+        
 
-            return LO;
-
-        };
+        
 
         var tt = createTimeTable();
 
