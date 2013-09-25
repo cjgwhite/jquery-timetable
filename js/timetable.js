@@ -16,6 +16,7 @@
             titleSize: 75,
             NoContentMsg: "No Activities to Display",
             loadingMsg: "Loading...",
+            loadErrorMsg: "An error occured loading the Timetable",
             hoursOptions: {
                 events: {}
             },
@@ -325,7 +326,9 @@
                         toabort.abort();
                     if (this.ajaxOn !== null) {
 
-                        this.ajaxOn.done($.proxy(this.__populateActivities, this));
+                        this.ajaxOn.done($.proxy(this.__populateActivities, this)).fail(function() {
+                            $(container).trigger("tt-activityLoadFailed");
+                        });
 
                     }
 
@@ -746,6 +749,9 @@
             });
             $(container).on("tt-activitiesLoaded", function(event) {
                 MO.hide();
+            });
+            $(container).on("tt-activityLoadFailed", function(event) {
+                MO.show($.isFunction(settings.loadErrorMsg) ? settings.loadErrorMsg() : settings.loadErrorMsg);
             });
         
             return MO;
