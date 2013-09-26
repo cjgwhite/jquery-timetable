@@ -325,8 +325,9 @@
                     if (toabort)
                         toabort.abort();
                     if (this.ajaxOn !== null) {
-
-                        this.ajaxOn.done($.proxy(this.__populateActivities, this)).fail(function() {
+                        this.ajaxOn.done(function(data) {
+                                $(container).trigger("tt-renderStart");
+                        }).done($.proxy(this.__populateActivities, this)).fail(function() {
                             $(container).trigger("tt-activityLoadFailed");
                         });
 
@@ -335,7 +336,6 @@
 
                 },
                 __populateActivities: function(activities) {
-
                     if (activities.length > 0) {
                         $.each(activities, $.proxy(function(index, activityData) {
 
@@ -747,8 +747,8 @@
             $(container).on("tt-activitiesLoading", function(event) {
                 MO.show($.isFunction(settings.loadingMsg) ? settings.loadingMsg() : settings.loadingMsg);
             });
-            $(container).on("tt-activitiesLoaded", function(event) {
-                MO.hide();
+            $(container).on("tt-renderStart", function(event) {
+                MO.show("Rendering Timetable");
             });
             $(container).on("tt-activityLoadFailed", function(event) {
                 MO.show($.isFunction(settings.loadErrorMsg) ? settings.loadErrorMsg() : settings.loadErrorMsg);
