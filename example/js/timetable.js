@@ -1,11 +1,11 @@
-(function($){
+(function($) {
     var TimeTable = function(options, container) {
 
         var defaultOptions = {
             orientation: "landscape",
             dayView: false,
             dayViewThreshold: 300,
-            dayViewChangeEvent: "click swipe",
+            dayViewChangeEvent: "click swiperight swipeleft",
             minHourSize: 50,
             minDaySize: 50,
             startHour: 9,
@@ -16,6 +16,7 @@
             titleSize: 75,
             NoContentMsg: "No Activities to Display",
             loadingMsg: "Loading...",
+            loadErrorMsg: "An error occured loading the Timetable",
             hoursOptions: {
                 events: {}
             },
@@ -35,40 +36,40 @@
         var OptionsDependant = function(container) {
             this.container = $(container);
         };
+
+        var settings = $.extend(true, defaultOptions, options);
+
         OptionsDependant.prototype = {
-            options: $.extend(
-                    true,
-                    defaultOptions,
-                    options
-                    ),
             orientation: function() {
 
                 if (this.isDayView()) {
                     return 'portrait';
                 } else {
-                    return this.options.orientation;
+                    return settings.orientation;
                 }
 
             },
             isMobile: function() {
-                if (this.options['isMobile'] != null && this.options['isMobile'] != undefined) {
-                    if ($.isFunction(this.options.isMobile)) {
-                        return this.options.isMobile();
+                if (settings['isMobile'] != null && settings['isMobile'] != undefined) {
+                    if ($.isFunction(settings.isMobile)) {
+                        return settings.isMobile();
                     } else {
-                        return this.options.isMobile;
+                        return settings.isMobile;
                     }
                 } else {
                     return /Android|webOS|iPhone|iPod|BlackBerry/i.test(navigator.userAgent);
                 }
             },
             isDayView: function() {
-                if (this.options.dayView || this.container.width() < this.options.dayViewThreshold || (this.isMobile())) {
+                if (settings.dayView || this.container.width() < settings.dayViewThreshold || (this.isMobile())) {
                     return true;
                 } else {
                     return false;
                 }
             }
-        }
+        };
+
+
 
         function createTimeTable() {
             return $.extend(
@@ -77,8 +78,7 @@
                     {
                         hoursContainer: new HoursContainer(),
                         daysContainer: new DaysContainer(),
-                        noContentOverlay: new NoContentOverlay(),
-                        loadingOverlay: new LoadingOverlay(),
+                        messageOverlay: new MessageOverlay(),
                         name: "timetable",
                         _create: function() {
                             var cssObj = {
@@ -94,14 +94,13 @@
                         _init: function() {
                             this.hoursContainer.init();
                             this.daysContainer.init();
-                            this.noContentOverlay.init();
-                            this.loadingOverlay.init();
+                            this.messageOverlay.init();
                             this.resize();
                         },
                         option: function(key, value) {
 
                             if ($.isPlainObject(key)) {
-                                this.options = $.extend(true, this.options, key);
+                                settings = $.extend(true, settings, key);
                                 $.each(key, $.proxy(function(key, val) {
                                     var evnt = {
                                         type: key + "Changed",
@@ -111,9 +110,9 @@
                                 }, this));
 
                             } else if (key && typeof value === "undefined") {
-                                return this.options[ key ];
+                                return settings[ key ];
                             } else {
-                                this.options[ key ] = value;
+                                settings[ key ] = value;
                                 var evnt = {
                                     type: key + "Changed",
                                     newValue: value
@@ -127,9 +126,9 @@
                         render: function(activityList) {
 
                             if (typeof activityList !== 'undefined') {
-                                this.options.activities = activityList;
+                                settings.activities = activityList;
                             }
-                                this.daysContainer.renderActivities();
+                            this.daysContainer.renderActivities();
 
 
                         },
@@ -180,25 +179,24 @@
                     return aHours;
                 },
                 render: function() {
-                    this.container.append(this.hours.slice(this.options.startHour, this.options.endHour + 1));
-                    this.hour = this.options.endHour - this.options.startHour + 1;
+                    this.container.append(this.hours.slice(settings.startHour, settings.endHour + 1));
+                    this.hour = settings.endHour - settings.startHour + 1;
                     this.resize();
                 },
                 resize: function() {
-    //                this.options.hourSize = (parseInt(this.container.css(posRef[this.orientation()].size)) - this.options.titleSize) / (this.hour);
-                    this.options.hourSize = (parseInt(this.container[posRef[this.orientation()].size]()) - this.options.titleSize) / (this.hour);
-                    this.options.hourNumber = this.hour;
+                    settings.hourSize = (parseInt(this.container[posRef[this.orientation()].size]()) - settings.titleSize) / (this.hour);
+                    settings.hourNumber = this.hour;
 
-                    if (this.options['minHourSize'] != null && this.options.hourSize < this.options.minHourSize) {
-                        this.options.hourSize = this.options.minHourSize;
+                    if (settings['minHourSize'] != null && settings.hourSize < settings.minHourSize) {
+                        settings.hourSize = settings.minHourSize;
 
                         var cssObj = {};
-                        cssObj[posRef[this.orientation()].size] = (this.options.hourSize * this.hour) + this.options.titleSize;
+                        cssObj[posRef[this.orientation()].size] = (settings.hourSize * this.hour) + settings.titleSize;
                         this.container.css(cssObj);
 
                     }
-                    var size = this.options.hourSize;
-                    var offset = this.options.titleSize;
+                    var size = settings.hourSize;
+                    var offset = settings.titleSize;
                     var that = this;
                     $("div.tt-hour", this.container).each(function(index, el) {
                         var cssObj = {
@@ -213,7 +211,7 @@
                     });
                 }
 
-            }, HC.options.hoursOptions);
+            }, settings.hoursOptions);
 
             return HC;
         };
@@ -250,8 +248,8 @@
                     this.days = this._generateDays();
                     var now = new Date();
                     var today = now.getDay();
-                    if (today > this.options.endDay || today < this.options.startDay) {
-                        this.viewDay = this.options.startDay;
+                    if (today > settings.endDay || today < settings.startDay) {
+                        this.viewDay = settings.startDay;
                     } else {
                         this.viewDay = today;
                     }
@@ -264,8 +262,8 @@
                         step = -1;
                     }
                     DC.viewDay = DC.viewDay + step;
-                    if (DC.viewDay > DC.options.endDay)
-                        DC.viewDay = DC.options.startDay;
+                    if (DC.viewDay > settings.endDay)
+                        DC.viewDay = settings.startDay;
                     DC.render();
                 },
                 _generateDays: function() {
@@ -280,29 +278,24 @@
                     ];
                 },
                 render: function() {
-    //                $('.tt-day', this.container).remove();
-
                     if (this.isDayView()) {
                         $('.tt-day', this.container).remove();
-                        this.container.append(this.days[this.viewDay].one(this.options.dayViewChangeEvent, this.__dayChange));
+                        this.container.append(this.days[this.viewDay].one(settings.dayViewChangeEvent, this.__dayChange));
                         this.day = 1;
                     } else {
-                        this.container.append(this.days.slice(this.options.startDay, this.options.endDay + 1));
-                        this.day = this.options.endDay - this.options.startDay + 1;
+                        this.container.append(this.days.slice(settings.startDay, settings.endDay + 1));
+                        this.day = settings.endDay - settings.startDay + 1;
                     }
                     this.resize();
                 },
                 daysActivities: new Array(),
                 defaultAjax: {
-                      beforeSend: $.proxy(function() {
-                          this.container.trigger("tt-activitiesLoading");
-                      }, DC),
-                      success: $.proxy(function() {
-                          this.container.trigger("tt-activitiesLoaded");
-                      }, DC)
-    //                success: $.proxy(function (activities, status, xhr) {
-    //                    this.__populateActivities(activities);
-    //                }, DC)
+                    beforeSend: $.proxy(function() {
+                        this.container.trigger("tt-activitiesLoading");
+                    }, DC),
+                    success: $.proxy(function() {
+                        this.container.trigger("tt-activitiesLoaded");
+                    }, DC)
                 },
                 ajaxOn: null,
                 renderActivities: function() {
@@ -318,37 +311,39 @@
                     });
 
 
-                    if ($.isFunction(this.options.activities)) {
-                        this.__populateActivities(this.options.activities());
-                    } else if ($.isPlainObject(this.options.activities)) {
-                        var ajaxSettings = $.extend(this.options.activities, this.defaultAjax);
+                    if ($.isFunction(settings.activities)) {
+                        this.__populateActivities(settings.activities());
+                    } else if ($.isPlainObject(settings.activities)) {
+                        var ajaxSettings = $.extend(settings.activities, this.defaultAjax);
                         this.ajaxOn = $.ajax(ajaxSettings);
-                    } else if ($.isArray(this.options.activities)) {
-                        this.__populateActivities(this.options.activities);
+                    } else if ($.isArray(settings.activities)) {
+                        this.__populateActivities(settings.activities);
                     } else {
-                        this.ajaxOn = $.ajax(this.options.activities, this.defaultAjax);
+                        this.ajaxOn = $.ajax(settings.activities, this.defaultAjax);
                     }
 
-                    if (toabort) toabort.abort();
+                    if (toabort)
+                        toabort.abort();
                     if (this.ajaxOn !== null) {
-
-                        this.ajaxOn.done($.proxy(this.__populateActivities, this));
+                        this.ajaxOn.done(function(data) {
+                                $(container).trigger("tt-renderStart");
+                        }).done($.proxy(this.__populateActivities, this)).fail(function() {
+                            $(container).trigger("tt-activityLoadFailed");
+                        });
 
                     }
 
 
                 },
                 __populateActivities: function(activities) {
-
                     if (activities.length > 0) {
-    //                    $(container).trigger("tt-activitiesChanged");
-                            $.each(activities, $.proxy(function(index, activityData) {
+                        $.each(activities, $.proxy(function(index, activityData) {
 
-                                var activity = new Activity(this.days[activityData.scheduledDay], activityData);
+                            var activity = new Activity(this.days[activityData.scheduledDay], activityData);
 
-                                this.daysActivities.push(activity);
-                            }, this));
-                            $(container).trigger("tt-activitiesRendered");
+                            this.daysActivities.push(activity);
+                        }, this));
+                        $(container).trigger("tt-activitiesRendered");
                     } else {
                         $(container).trigger("tt-noActivities");
                     }
@@ -359,23 +354,21 @@
                     activity._attach();
                 },
                 resize: function() {
+                    settings.daySize = (parseInt(this.container[posRef[this.orientation()].size]()) - settings.titleSize) / this.day;
 
-    //                this.options.daySize = (parseInt(this.container.css(posRef[this.orientation()].size)) - this.options.titleSize) / this.day;
-                    this.options.daySize = (parseInt(this.container[posRef[this.orientation()].size]()) - this.options.titleSize) / this.day;
-
-                    if (this.options['minDaySize'] != null && this.options.daySize < this.options.minDaySize) {
-                        this.options.daySize = this.options.minDaySize;
+                    if (settings['minDaySize'] != null && settings.daySize < settings.minDaySize) {
+                        settings.daySize = settings.minDaySize;
 
                         var cssObj = {};
-                        cssObj[posRef[this.orientation()].size] = (this.options.daySize * this.day ) + this.options.titleSize;
+                        cssObj[posRef[this.orientation()].size] = (settings.daySize * this.day) + settings.titleSize;
                         this.container.css(cssObj);
 
                     }
 
-                    var size = this.options.daySize;
-                    var offset = this.options.titleSize;
+                    var size = settings.daySize;
+                    var offset = settings.titleSize;
 
-                    this.options.dayNumber = this.day;
+                    settings.dayNumber = this.day;
 
                     var that = this;
                     $("div.tt-day", this.container).each(function(index, el) {
@@ -388,8 +381,42 @@
                         cssObj[posRef[that.orientation()].nonposition] = 0;
                         $(this).css(cssObj);
                     });
+
+                    var titlePos = {
+                        position: "absolute",
+                        "text-align": "center"
+                    };
+
+                    titlePos[posRef[that.orientation()].size] = "100%";
+                    titlePos[posRef[that.orientation()].nonsize] = settings.titleSize;
+                    var hidden = $("<span/>", {style: "visibility:hidden;width:auto;height:auto;font-size:5px;"});
+                    hidden.text(this.dayNames[this.lang][0]);
+                    $(this.container).append(hidden);
+                    var hiddenSize = {
+                        "width": hidden.width(),
+                        "height": hidden.height()
+                    };
+                    while (hiddenSize[posRef[that.orientation()].size] < size / 2 && hiddenSize[posRef[that.orientation()].nonsize] < settings.titleSize / 2) {
+                        var fs = parseInt(hidden.css("font-size"), 10);
+                        hidden.css({
+                            "font-size": (fs + 1) + "px"
+                        });
+                        hiddenSize.width = hidden.width();
+                        hiddenSize.height = hidden.height();
+                    }
+                    titlePos["font-size"] = hidden.css("font-size");
+
+                    hidden.remove();
+
+                    $('div.tt-dayTitle', this.container).each(function(index, el) {
+                        $(this).css(titlePos);
+                        $(this).css({
+                            "line-height": $(this).height() + "px"
+                        });
+                    });
+
                 }
-            }, DC.options.daysOptions);
+            }, settings.daysOptions);
 
             $(container).on("tt-activitiesChanged", $.proxy(DC.renderActivities, DC));
 
@@ -431,20 +458,20 @@
                     this.minute = parseInt(start[1], 10);
 
                     var changed = false;
-                    if (this.hour < this.options.startHour) {
-                        this.options.startHour = this.hour;
+                    if (this.hour < settings.startHour) {
+                        settings.startHour = this.hour;
                         changed = true;
                     }
-                    if (this.hour + (this.duration / 60) > this.options.endHour) {
-                        this.options.endHour = Math.ceil(this.hour + (this.duration / 60));
+                    if (this.hour + (this.duration / 60) > settings.endHour) {
+                        settings.endHour = Math.ceil(this.hour + (this.duration / 60));
                         changed = true;
                     }
-                    if (this.dow < this.options.startDay) {
-                        this.options.startDay = this.dow;
+                    if (this.dow < settings.startDay) {
+                        settings.startDay = this.dow;
                         changed = true;
                     }
-                    if (this.dow > this.options.endDay) {
-                        this.options.endDay = this.dow;
+                    if (this.dow > settings.endDay) {
+                        settings.endDay = this.dow;
                         changed = true;
                     }
                     this._attach();
@@ -513,7 +540,7 @@
                     if (this.colour)
                         baseColour = this.colour;
 
-                    this.activityObj.css({"background-color": baseColour});
+
                     if ($.isFunction($.Color)) {
 
                         var startColour = $.Color(baseColour);
@@ -528,7 +555,7 @@
                         this.activityObj.css(css);
 
                     }
-
+                    this.activityObj.css({"background-color": baseColour});
                 },
                 _attach: function() {
                     var content = "";
@@ -550,9 +577,9 @@
                     $(this.container).off("activityAdded", this._onActivityAdded);
                 },
                 resize: function() {
-                    var dayIndex = this.dow - this.options.startDay;
-                    var hourIndex = this.hour - this.options.startHour;// + 1;
-                    var hourOffset = (this.options.hourSize / 60) * this.minute;
+                    var dayIndex = this.dow - settings.startDay;
+                    var hourIndex = this.hour - settings.startHour;
+                    var hourOffset = (settings.hourSize / 60) * this.minute;
 
                     var cssObj = {
                         position: "absolute"
@@ -564,22 +591,22 @@
                         sizeFactor: 0
                     };
                     $.each(this.overlaps, $.proxy(function(index, activity) {
-                        if (activity.position > this.position && activity.position <= expandto.position && activity.sizeFactor >= expandto.sizeFactor)
+                        if (activity.position > this.position && activity.position <= expandto.position && activity.sizeFactor >= expandto.sizeFactor) {
                             expandto = activity;
+                        }
                     }, this));
 
-                    //var activityWidth = this.options.daySize / (this.sizeFactor + (this.sizeFactor*sf));
-                    var activityWidth = (this.options.daySize) / (this.sizeFactor);
+                    var activityWidth = (settings.daySize) / (this.sizeFactor);
 
-                    cssObj[posRef[this.orientation()].hour] = (hourIndex * this.options.hourSize) + hourOffset + this.options.titleSize;
-                    cssObj[posRef[this.orientation()].day] = (activityWidth * this.position) + this.activityMargin;// 0;//(dayIndex * this.options.daySize) + (this.options.daySize * 0.1);
-                    cssObj[posRef[this.orientation()].size] = this.duration * (this.options.hourSize / 60) - this.activityMargin;
-                    if (expandto.sizeFactor > 0 && (activityWidth * this.position + activityWidth) != ((this.options.daySize / expandto.sizeFactor) * expandto.position)) {
-                        activityWidth += ((this.options.daySize / expandto.sizeFactor) * expandto.position) - (activityWidth * this.position + activityWidth);
-                        cssObj[posRef[this.orientation()].nonsize] = activityWidth - this.activityMargin - 1;//"100%";//this.options.daySize * 0.8;
-                    } else
-                        cssObj[posRef[this.orientation()].nonsize] = activityWidth - (this.activityMargin * 2) - 1;//"100%";//this.options.daySize * 0.8;
-
+                    cssObj[posRef[this.orientation()].hour] = (hourIndex * settings.hourSize) + hourOffset + settings.titleSize;
+                    cssObj[posRef[this.orientation()].day] = (activityWidth * this.position) + this.activityMargin;
+                    cssObj[posRef[this.orientation()].size] = this.duration * (settings.hourSize / 60) - this.activityMargin;
+                    if (expandto.sizeFactor > 0 && (activityWidth * this.position + activityWidth) != ((settings.daySize / expandto.sizeFactor) * expandto.position)) {
+                        activityWidth += ((settings.daySize / expandto.sizeFactor) * expandto.position) - (activityWidth * this.position + activityWidth);
+                        cssObj[posRef[this.orientation()].nonsize] = activityWidth - this.activityMargin - 1;
+                    } else {
+                        cssObj[posRef[this.orientation()].nonsize] = activityWidth - (this.activityMargin * 2) - 1;
+                    }
 
                     this.activityObj.css(cssObj);
                     var content = $.proxy(this.content, this);
@@ -636,7 +663,7 @@
                 }
 
 
-            }, A.options.ActivityOptions, data);
+            }, settings.ActivityOptions, data);
 
 
 
@@ -656,32 +683,28 @@
             return A;
         };
 
-        var NoContentOverlay = function() {
-            var NCO = new OptionsDependant(container);
+        var MessageOverlay = function() {
+            var MO = new OptionsDependant(container);
 
-            $.extend(true, NCO, {
-                overlay: $("<div/>", { "class": "tt-overlay" }).append($("<div/>", {"class":"tt-noContent"}).html("No Activities to display")),
+            $.extend(true, MO, {
+                overlay: $("<div/>", {"class": "tt-overlay", style: "display: none;"}).append($("<div/>", {"class": "tt-message"}).html("No Message")),
                 init: function() {
+                    
                     $(container).append(this.overlay);
 
-                    if ($.isFunction(this.options.NoContentMsg))
-                        $(".tt-noContent", this.overlay).html(this.options.NoContentMsg());
-                    else
-                        $(".tt-noContent", this.overlay).html(this.options.NoContentMsg);
+                    $(this.overlay).css({
+                        "position": "relative",
+                        "z-index": 1000
+                    });
 
-                        $(this.overlay).css({
-                            "position": "relative",
-                            "z-index": 1000
-                        });
-
-                    $(".tt-noContent", this.overlay).css({
+                    $(".tt-message", this.overlay).css({
                         position: "absolute",
                         opacity: 1
 
                     });
-
                 },
-                show: function() {
+                show: function(message) {
+                    $('.tt-message', this.overlay).html(message);
                     this.overlay.fadeIn();
                     this.resize();
                 },
@@ -701,100 +724,42 @@
                         left: left
                     });
 
-                    var overlayMsg = $(".tt-noContent", this.overlay);
+                    var overlayMsg = $(".tt-message", this.overlay);
                     overlayMsg.css({
-                        top: ($(container).height()-overlayMsg.height())/2,
-                        left: ($(container).width()-overlayMsg.width())/2
+                        top: ($(container).height() - overlayMsg.height()) / 2,
+                        left: ($(container).width() - overlayMsg.width()) / 2
 
                     });
-
-
-
                 }
-
             });
-
+            
+            
+            
             $(container).on("tt-noActivities", function() {
-                NCO.show();
+                MO.show($.isFunction(settings.NoContentMsg) ? settings.NoContentMsg() : settings.NoContentMsg);
             });
             $(container).on("tt.container.updated", function(event) {
-                NCO.resize();
+                MO.resize();
             });
-            $(container).on("tt-activitiesRendered", function(event){
-                NCO.hide();
+            $(container).on("tt-activitiesRendered", function(event) {
+                MO.hide();
             });
-            $(container).on("tt-activitiesLoading", function(event){
-                NCO.hide();
+            $(container).on("tt-activitiesLoading", function(event) {
+                MO.show($.isFunction(settings.loadingMsg) ? settings.loadingMsg() : settings.loadingMsg);
             });
-
-            return NCO;
-        };
-
-        var LoadingOverlay = function() {
-            var LO = new OptionsDependant(container);
-
-            $.extend(true, LO, {
-                overlay: $("<div/>", { "class": "tt-overlay" }).append($("<div/>", {"class":"tt-loading"}).html("Loading...")),
-                init: function() {
-                    $(container).append(this.overlay);
-
-                    if ($.isFunction(this.options.LoadingMsg))
-                        $(".tt-loading", this.overlay).html(this.options.loadingMsg());
-                    else
-                        $(".tt-loading", this.overlay).html(this.options.loadingMsg);
-
-                        $(this.overlay).css({
-                            "position": "relative",
-                            "z-index": 10000
-                        });
-
-                    $(".tt-loading", this.overlay).css({
-                        position: "absolute",
-                        opacity: 1
-
-                    });
-
-                },
-                show: function() {
-                    this.overlay.fadeIn();
-                    this.resize();
-                },
-                hide: function() {
-                    this.overlay.fadeOut();
-                },
-                resize: function() {
-                    var width = $(container).width();
-                    var height = $(container).height();
-                    var top = 0;
-                    var left = 0;
-
-                    this.overlay.css({
-                        width: width,
-                        height: height,
-                        top: top,
-                        left: left
-                    });
-
-                    var overlayMsg = $(".tt-loading", this.overlay);
-                    overlayMsg.css({
-                        top: ($(container).height()-overlayMsg.height())/2,
-                        left: ($(container).width()-overlayMsg.width())/2
-
-                    });
-                }
-
+            $(container).on("tt-renderStart", function(event) {
+                MO.show("Rendering Timetable");
             });
-
-            $(container).on("tt-activitiesLoading", function(event){
-                LO.show();
+            $(container).on("tt-activityLoadFailed", function(event) {
+                MO.show($.isFunction(settings.loadErrorMsg) ? settings.loadErrorMsg() : settings.loadErrorMsg);
             });
-            $(container).on("tt-activitiesLoaded", function(event){
-                LO.hide();
-            });
+        
+            return MO;
+        }
 
-            return LO;
+        
 
-        };
+        
 
         var tt = createTimeTable();
 
@@ -809,12 +774,10 @@
         $(container).on("tt.update", $.proxy(function(event) {
             this.hoursContainer.render();
             this.daysContainer.render();
-            //this.activityContainer.resize();
             $(container).trigger("tt.container.updated");
             event.stopPropagation();
         }, tt));
         $(container).on("tt-activitiesChanged", $.proxy(function(evnt) {
-            //this.activityContainer.render();
             this.render();
         }, tt));
 

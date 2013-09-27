@@ -1,3 +1,41 @@
+/* #timetable {
+    background: none repeat scroll 0 0 #fff;
+    color: #000;
+    height: 100%;
+    width: 100%;
+} */
+
+.tt-activity{
+    padding: 0;
+    font-size: 0.9em;
+    border:0.1em solid #000;
+	border-radius: 0.5em;
+	-moz-border-radius: 0.5em ;
+	-webkit-border-radius: 0.5em ;
+    overflow: hidden;
+    color: #000;
+}
+
+.tt-activity h4 {
+    padding: 2px 0.5em 0 0.5em;
+}
+.tt-activity ol{
+   margin: 0 0 0 1%;
+    font-size: 86%;
+    white-space: nowrap;
+    padding: 0 0.5em 0 0.5em;
+}
+.tt-activity ol li {
+    list-style: none outside none;
+    
+}
+.tt-activity:hover,
+.tt-activity:focus{
+    background-color:#B797C9;
+}
+
+
+
 .tt-day {
     border-left: 1px solid gray;
     border-top: 1px solid gray;
@@ -7,38 +45,15 @@
     border-top: 1px dashed gray;
 }
 
-.tt-activity {
-    border: 1px solid grey;
-    border-radius: 0.5em ;
-    -moz-border-radius: 0.5em ;
-    -webkit-border-radius: 0.5em ;
-}
 
-.tt-activity * {
-    margin-left: 5px;
-    margin-right: 5px;
-}
-.tt-activity *:first-child {
-    margin-top: 5px;
-}
-
-.tt-activity *:last-child {
-    margin-bottom: 5px;
-}
-
-.tt-mobile {
-    font-size: xx-large;
-}
-.tt-mobile .tt-hour {
-    border-left: 1px solid gray;
-    border-top: 1px solid gray;
-    min-height: 100px;
+.tt-day{
+    clear:both;
 }
 .tt-overlay {
-    background-color: black;
+    background-color: white;
     opacity: 0.5;
 }
-.tt-overlay .tt-noContent {
+.tt-overlay div {
     padding: 5px;
     border: 0.1em solid #000;
     border-radius: 0.5em ;
@@ -47,3 +62,16 @@
     font-weight: bold;
     white-space: nowrap;
 }
+
+.title a {
+    text-decoration: none;
+}
+.title a img {
+    vertical-align: middle;
+}
+
+
+.controls {
+    margin: 10px;
+}
+
