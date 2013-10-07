@@ -5,7 +5,6 @@
             orientation: "landscape",
             dayView: false,
             dayViewThreshold: 300,
-            dayViewChangeEvent: "click swiperight swipeleft",
             minHourSize: 50,
             minDaySize: 50,
             startHour: 9,
@@ -256,31 +255,53 @@
 
                     this.render();
                 },
-                __dayChange: function(event) {
-                    var step = 1;
-                    if (event.type == "swiperight") {
-                        step = -1;
+                touch: {},
+                move : 0,
+                __dayChangeEvents: {
+                    "touchstart": function(startEvent) {
+                        var touchStart = startEvent.originalEvent.touches[0].pageX;
+                        var touchMove = 0;
+                        var touchExceeded = false;
+                        $(this).on("touchmove", function(moveEvent) {
+                            var touchEnd = moveEvent.originalEvent.touches[0].pageX;
+                            touchMove = touchStart - touchEnd;
+                            if(Math.abs(touchMove) > 20) {
+                                moveEvent.preventDefault();
+                                touchExceeded = true;
+                            }
+                        });
+                        
+                        $(this).on("touchend touchcancel", function(endEvent) {
+                            if(touchExceeded) {
+                                endEvent.preventDefault();
+                                var step = touchMove / Math.abs(touchMove) // convert to +1 or -1
+                                DC.viewDay = Math.min(Math.max(DC.viewDay + step, settings.startDay), settings.endDay); // set viewDay changed
+                                DC.render();
+                            }
+                            $(this).off("touchmove touchend touchcancel");
+                        });
                     }
-                    DC.viewDay = DC.viewDay + step;
-                    if (DC.viewDay > settings.endDay)
-                        DC.viewDay = settings.startDay;
-                    DC.render();
+                    
                 },
                 _generateDays: function() {
+                    var eventHandlers = this.events;
+                    if (this.isMobile()) {
+                        eventHandlers = $.extend(this.__dayChangeEvents, eventHandlers);
+                    }
                     return [
-                        $("<div/>", {"class": "tt-day"}).on(this.events).append($("<div/>", {"class": "tt-dayTitle"}).text(this.dayNames[this.lang][0])),
-                        $("<div/>", {"class": "tt-day"}).on(this.events).append($("<div/>", {"class": "tt-dayTitle"}).text(this.dayNames[this.lang][1])),
-                        $("<div/>", {"class": "tt-day"}).on(this.events).append($("<div/>", {"class": "tt-dayTitle"}).text(this.dayNames[this.lang][2])),
-                        $("<div/>", {"class": "tt-day"}).on(this.events).append($("<div/>", {"class": "tt-dayTitle"}).text(this.dayNames[this.lang][3])),
-                        $("<div/>", {"class": "tt-day"}).on(this.events).append($("<div/>", {"class": "tt-dayTitle"}).text(this.dayNames[this.lang][4])),
-                        $("<div/>", {"class": "tt-day"}).on(this.events).append($("<div/>", {"class": "tt-dayTitle"}).text(this.dayNames[this.lang][5])),
-                        $("<div/>", {"class": "tt-day"}).on(this.events).append($("<div/>", {"class": "tt-dayTitle"}).text(this.dayNames[this.lang][6]))
+                        $("<div/>", {"class": "tt-day"}).bind(eventHandlers).append($("<div/>", {"class": "tt-dayTitle"}).text(this.dayNames[this.lang][0])),
+                        $("<div/>", {"class": "tt-day"}).bind(eventHandlers).append($("<div/>", {"class": "tt-dayTitle"}).text(this.dayNames[this.lang][1])),
+                        $("<div/>", {"class": "tt-day"}).bind(eventHandlers).append($("<div/>", {"class": "tt-dayTitle"}).text(this.dayNames[this.lang][2])),
+                        $("<div/>", {"class": "tt-day"}).bind(eventHandlers).append($("<div/>", {"class": "tt-dayTitle"}).text(this.dayNames[this.lang][3])),
+                        $("<div/>", {"class": "tt-day"}).bind(eventHandlers).append($("<div/>", {"class": "tt-dayTitle"}).text(this.dayNames[this.lang][4])),
+                        $("<div/>", {"class": "tt-day"}).bind(eventHandlers).append($("<div/>", {"class": "tt-dayTitle"}).text(this.dayNames[this.lang][5])),
+                        $("<div/>", {"class": "tt-day"}).bind(eventHandlers).append($("<div/>", {"class": "tt-dayTitle"}).text(this.dayNames[this.lang][6]))
                     ];
                 },
                 render: function() {
                     if (this.isDayView()) {
-                        $('.tt-day', this.container).remove();
-                        this.container.append(this.days[this.viewDay].one(settings.dayViewChangeEvent, this.__dayChange));
+                        $('.tt-day', this.container).detach();
+                        this.container.append(this.days[this.viewDay]);
                         this.day = 1;
                     } else {
                         this.container.append(this.days.slice(settings.startDay, settings.endDay + 1));
