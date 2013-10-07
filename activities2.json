@@ -1,0 +1,236 @@
+[
+    {
+        "name": "BIOL31362/LEC/LEC1/01",
+        "location": {
+            "name": "Lecture Theatre 2",
+            "description": "Plus 2 Wheelchair Spaces"
+        },
+        "description": "Bacterial Infections of Man",
+        "color": "#aafe7f",
+        "duration": 120,
+        "additionalText": "",
+        "moduleName": "BIOL31362",
+        "activityType": "LECTURE",
+        "weekLabels": "19-24",
+        "scheduledDay": 1,
+        "moduleDescription": "Bacterial Infections of Man",
+        "startTime": "14:00",
+        "endTime": "16:00"
+    },
+    {
+        "name": "BIOL31362/LEC/LEC1/02",
+        "location": {
+            "name": "Lecture Theatre 5",
+            "description": "Plus 1 Wheelchair Space"
+        },
+        "description": "Bacterial Infections of Man",
+        "color": "#aafe7f",
+        "duration": 60,
+        "additionalText": "",
+        "moduleName": "BIOL31362",
+        "activityType": "LECTURE",
+        "weekLabels": "19-24",
+        "scheduledDay": 4,
+        "moduleDescription": "Bacterial Infections of Man",
+        "startTime": "9:00",
+        "endTime": "10:00"
+    },
+    {
+        "name": "BIOL31461/LEC/LEC1/01",
+        "location": {
+            "name": "Lecture Theatre 3",
+            "description": "Plus 2 Wheelchair Spaces"
+        },
+        "description": "Chemical Communication in Animals",
+        "color": "#9e7ffe",
+        "duration": 120,
+        "additionalText": "",
+        "moduleName": "BIOL31461",
+        "activityType": "LECTURE",
+        "weekLabels": "7-12",
+        "scheduledDay": 1,
+        "moduleDescription": "Chemical Communication in Animals",
+        "startTime": "15:00",
+        "endTime": "17:00"
+    },
+    {
+        "name": "BIOL31461/LEC/LEC1/02",
+        "location": {
+            "name": "Lecture Theatre 1",
+            "description": "Plus 2 Wheelchair Spaces"
+        },
+        "description": "Chemical Communication in Animals",
+        "color": "#9e7ffe",
+        "duration": 60,
+        "additionalText": "",
+        "moduleName": "BIOL31461",
+        "activityType": "LECTURE",
+        "weekLabels": "7-12",
+        "scheduledDay": 5,
+        "moduleDescription": "Chemical Communication in Animals",
+        "startTime": "14:00",
+        "endTime": "15:00"
+    },
+    {
+        "name": "BIOL31681/LEC/LEC1/01",
+        "location": {
+            "name": "Lecture Theatre 5",
+            "description": ""
+        },
+        "description": "Clocks, Sleep & the Rhythms of Life",
+        "color": "#fe7fdd",
+        "duration": 60,
+        "additionalText": "",
+        "moduleName": "BIOL31681",
+        "activityType": "LECTURE",
+        "weekLabels": "1-6",
+        "scheduledDay": 1,
+        "moduleDescription": "Clocks, Sleep & the Rhythms of Life",
+        "startTime": "10:00",
+        "endTime": "11:00"
+    },
+    {
+        "name": "BIOL31681/LEC/LEC1/02",
+        "location": {
+            "name": "Lecture Theatre 2",
+            "description": ""
+        },
+        "description": "Clocks, Sleep & the Rhythms of Life",
+        "color": "#fe7fdd",
+        "duration": 60,
+        "additionalText": "",
+        "moduleName": "BIOL31681",
+        "activityType": "LECTURE",
+        "weekLabels": "1-6",
+        "scheduledDay": 3,
+        "moduleDescription": "Clocks, Sleep & the Rhythms of Life",
+        "startTime": "11:00",
+        "endTime": "12:00"
+    },
+    {
+        "name": "BIOL31681/LEC/LEC1/03",
+        "location": {
+            "name": "Lecture Room 4",
+            "description": "Plus 2 Wheelchair Spaces"
+        },
+        "description": "Clocks, Sleep & the Rhythms of Life",
+        "color": "#fe7fdd",
+        "duration": 60,
+        "additionalText": "",
+        "moduleName": "BIOL31681",
+        "activityType": "LECTURE",
+        "weekLabels": "1-6",
+        "scheduledDay": 5,
+        "moduleDescription": "Clocks, Sleep & the Rhythms of Life",
+        "startTime": "9:00",
+        "endTime": "10:00"
+    },
+    {
+        "name": "BIOL31771/LEC/LEC1/01",
+        "location": {
+            "name": "Lecture Room 2",
+            "description": "Plus 1 Wheelchair Space"
+        },
+        "description": "Cell Adhesion",
+        "color": "#d9fe7f",
+        "duration": 60,
+        "additionalText": "",
+        "moduleName": "BIOL31771",
+        "activityType": "LECTURE",
+        "weekLabels": "7-12",
+        "scheduledDay": 1,
+        "moduleDescription": "Cell Adhesion",
+        "startTime": "9:00",
+        "endTime": "10:00"
+    },
+    {
+        "name": "BIOL31771/LEC/LEC1",
+        "location": {
+            "name": "Lecture Room 2",
+            "description": "Plus 1 Wheelchair Space"
+        },
+        "description": "Cell Adhesion",
+        "color": "#d9fe7f",
+        "duration": 60,
+        "additionalText": "",
+        "moduleName": "BIOL31771",
+        "activityType": "LECTURE",
+        "weekLabels": "7-12",
+        "scheduledDay": 3,
+        "moduleDescription": "Cell Adhesion",
+        "startTime": "11:00",
+        "endTime": "12:00"
+    },
+    {
+        "name": "BIOL31771/LEC/LEC1",
+        "location": {
+            "name": "Lecture Room 2",
+            "description": "Plus 1 Wheelchair Space"
+        },
+        "description": "Cell Adhesion",
+        "color": "#d9fe7f",
+        "duration": 60,
+        "additionalText": "",
+        "moduleName": "BIOL31771",
+        "activityType": "LECTURE",
+        "weekLabels": "7-12",
+        "scheduledDay": 5,
+        "moduleDescription": "Cell Adhesion",
+        "startTime": "13:00",
+        "endTime": "14:00"
+    },
+    {
+        "name": "BIOL31791/LEC/LEC1/01",
+        "location": {
+            "name": "Lecture Room 1",
+            "description": "Plus 1 Wheelchair Space"
+        },
+        "description": "Advanced Parasitology",
+        "color": "#aa7ffe",
+        "duration": 60,
+        "additionalText": "",
+        "moduleName": "BIOL31791",
+        "activityType": "LECTURE",
+        "weekLabels": "7-12",
+        "scheduledDay": 2,
+        "moduleDescription": "Advanced Parasitology",
+        "startTime": "9:00",
+        "endTime": "10:00"
+    },
+    {
+        "name": "BIOL31791/LEC/LEC2/01",
+        "location": {
+            "name": "Lecture Room 2",
+            "description": "Plus 2 Wheelchair Spaces"
+        },
+        "description": "Advanced Parasitology",
+        "color": "#aa7ffe",
+        "duration": 60,
+        "additionalText": "",
+        "moduleName": "BIOL31791",
+        "activityType": "LECTURE",
+        "weekLabels": "7-12",
+        "scheduledDay": 3,
+        "moduleDescription": "Advanced Parasitology",
+        "startTime": "12:00",
+        "endTime": "13:00"
+    },
+    {
+        "name": "BIOL31791/LEC/LEC3/01",
+        "location": {
+            "name": "Lecture Room 1",
+            "description": ""
+        },
+        "description": "Advanced Parasitology",
+        "color": "#aa7ffe",
+        "duration": 60,
+        "additionalText": "",
+        "moduleName": "BIOL31791",
+        "activityType": "LECTURE",
+        "weekLabels": "7-12",
+        "scheduledDay": 4,
+        "moduleDescription": "Advanced Parasitology",
+        "startTime": "9:00",
+        "endTime": "10:00"
+    }
+]

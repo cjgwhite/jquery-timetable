@@ -1,0 +1,289 @@
+[
+    {
+        "name": "MATH20101/TUT/TUT1/03",
+        "location": {
+            "name": "Tutorial Room 1",
+            "description": ""
+        },
+        "description": "Real and Complex Analysis",
+        "color": "#9efe7f",
+        "duration": 60,
+        "additionalText": "",
+        "moduleName": "MATH20101",
+        "activityType": "TUTORIAL",
+        "weekLabels": "1-5, 7-12",
+        "scheduledDay": 2,
+        "moduleDescription": "Real and Complex Analysis",
+        "startTime": "15:00",
+        "endTime": "16:00"
+    }, 
+    {
+        "name": "MATH20401/LEC/LEC/01 <2>", 
+        "location": {
+            "name": "Lecture Theatre 2", 
+            "description": ""
+        }, 
+        "description": "Partial Differential Equations and Vector Calculus A", 
+        "color": "#7fd5fe", 
+        "duration": 120, 
+        "additionalText": "", 
+        "moduleName": "MATH20401", 
+        "activityType": "LECTURE", 
+        "weekLabels": "1", 
+        "scheduledDay": 1, 
+        "moduleDescription": "Partial Differential Equations and Vector Calculus A", 
+        "startTime": "12:00", 
+        "endTime": "14:00"
+    }, 
+    {
+        "name": "MATH20101/LEC/LEC/01", 
+        "location": {
+            "name": "Lecture Theatre 1", 
+            "description": ""
+        }, 
+        "description": "Real and Complex Analysis", 
+        "color": "#9efe7f", 
+        "duration": 60, 
+        "additionalText": "", 
+        "moduleName": "MATH20101", 
+        "activityType": "LECTURE", 
+        "weekLabels": "1-5, 7-12", 
+        "scheduledDay": 3, 
+        "moduleDescription": "Real and Complex Analysis", 
+        "startTime": "9:00", 
+        "endTime": "10:00"
+    }, 
+    {
+        "name": "MATH20401/LEC/LEC/02 <2-6>", 
+        "location": {
+            "name": "Lecture Theatre 2", 
+            "description": ""
+        }, 
+        "description": "Partial Differential Equations and Vector Calculus A", 
+        "color": "#7fd5fe", 
+        "duration": 120, 
+        "additionalText": "", 
+        "moduleName": "MATH20401", 
+        "activityType": "LECTURE", 
+        "weekLabels": "1-5", 
+        "scheduledDay": 3, 
+        "moduleDescription": "Partial Differential Equations and Vector Calculus A", 
+        "startTime": "11:00", 
+        "endTime": "13:00"
+    }, 
+    {
+        "name": "MATH20101/LEC/LEC/03", 
+        "location": {
+            "name": "Leacture Theatre 2", 
+            "description": ""
+        }, 
+        "description": "Real and Complex Analysis", 
+        "color": "#9efe7f", 
+        "duration": 60, 
+        "additionalText": "", 
+        "moduleName": "MATH20101", 
+        "activityType": "LECTURE", 
+        "weekLabels": "1-5, 7-12", 
+        "scheduledDay": 4, 
+        "moduleDescription": "Real and Complex Analysis", 
+        "startTime": "9:00", 
+        "endTime": "10:00"
+    }, 
+    {
+        "name": "MATH20201/LEC/LEC/02", 
+        "location": {
+            "name": "Leacture Theatre 3", 
+            "description": "" 
+        }, 
+        "description": "Algebraic Structures 1", 
+        "color": "#7fbefe", 
+        "duration": 60, 
+        "additionalText": "", 
+        "moduleName": "MATH20201", 
+        "activityType": "LECTURE", 
+        "weekLabels": "1-5, 7-12", 
+        "scheduledDay": 4, 
+        "moduleDescription": "Algebraic Structures 1", 
+        "startTime": "14:00", 
+        "endTime": "15:00"
+    }, 
+    {
+        "name": "MATH20401/TUT/TUT2/01", 
+        "location": {
+            "name": "Tutorial Room 2", 
+            "description": "" 
+        }, 
+        "description": "Partial Differential Equations and Vector Calculus A", 
+        "color": "#7fd5fe", 
+        "duration": 60, 
+        "additionalText": "", 
+        "moduleName": "MATH20401", 
+        "activityType": "TUTORIAL", 
+        "weekLabels": "1-5, 7-12", 
+        "scheduledDay": 5, 
+        "moduleDescription": "Partial Differential Equations and Vector Calculus A", 
+        "startTime": "11:00", 
+        "endTime": "12:00"
+    }, 
+    {
+        "name": "MATH20101/LEC/LEC/02", 
+        "location": {
+            "name": "Lecture Theatre 3", 
+            "description": "" 
+        }, 
+        "description": "Real and Complex Analysis", 
+        "color": "#9efe7f", 
+        "duration": 60, 
+        "additionalText": "", 
+        "moduleName": "MATH20101", 
+        "activityType": "LECTURE", 
+        "weekLabels": "1-5, 7-12", 
+        "scheduledDay": 4, 
+        "moduleDescription": "Real and Complex Analysis", 
+        "startTime": "11:00", 
+        "endTime": "12:00"
+    }, 
+    {
+        "name": "MATH20101/LEC/LEC/04", 
+        "location": {
+            "name": "Leacture Theatre 1", 
+            "description": "" 
+        },
+        "description": "Real and Complex Analysis", 
+        "color": "#9efe7f", 
+        "duration": 60, 
+        "additionalText": "", 
+        "moduleName": "MATH20101", 
+        "activityType": "LECTURE", 
+        "weekLabels": "1-5, 7-12", 
+        "scheduledDay": 5, 
+        "moduleDescription": "Real and Complex Analysis", 
+        "startTime": "16:00", 
+        "endTime": "17:00"
+    }, 
+    {
+        "name": "MATH20201/LEC/LEC/03", 
+        "location": {
+            "name": "Leacture Theatre 4", 
+            "description": ""
+        }, 
+        "description": "Algebraic Structures 1", 
+        "color": "#7fbefe", 
+        "duration": 60, 
+        "additionalText": "", 
+        "moduleName": "MATH20201", 
+        "activityType": "LECTURE", 
+        "weekLabels": "1-5, 7-12", 
+        "scheduledDay": 5, 
+        "moduleDescription": "Algebraic Structures 1", 
+        "startTime": "13:00", 
+        "endTime": "14:00"
+     }, {
+         "name": "MATH20701/LEC/LEC/02", 
+         "location": {
+             "name": "Lecture Theatre 2", 
+             "description": "" 
+         }, 
+         "description": "Probability and Statistics", 
+         "color": "#d97ffe", 
+         "duration": 60, 
+         "additionalText": "", 
+         "moduleName": "MATH20701", 
+         "activityType": "LECTURE", 
+         "weekLabels": "1-5, 7-12", 
+         "scheduledDay": 5, 
+         "moduleDescription": "Probability and Statistics", 
+         "startTime": "10:00", 
+         "endTime": "11:00"
+     }, 
+     {
+         "name": "MATH20401/TUT/TUT1/01", 
+         "location": {
+             "name": "Tutorial Room 1", 
+             "description": "" 
+         },
+         "description": "Partial Differential Equations and Vector Calculus A", 
+         "color": "#7fd5fe", 
+         "duration": 60, 
+         "additionalText": "", 
+         "moduleName": "MATH20401", 
+         "activityType": "TUTORIAL", 
+         "weekLabels": "1-5, 7-12", 
+         "scheduledDay": 4, 
+         "moduleDescription": "Partial Differential Equations and Vector Calculus A", 
+         "startTime": "12:00", 
+         "endTime": "13:00"
+     }, 
+     {
+         "name": "MATH20401/TUT/TUT3/01", 
+         "location": {
+             "name": "Tutorial Room 6", 
+             "description": ""
+         }, 
+         "description": "Partial Differential Equations and Vector Calculus A", 
+         "color": "#7fd5fe", 
+         "duration": 60, 
+         "additionalText": "", 
+         "moduleName": "MATH20401", 
+         "activityType": "TUTORIAL", 
+         "weekLabels": "1-5, 7-12", 
+         "scheduledDay": 1, 
+         "moduleDescription": "Partial Differential Equations and Vector Calculus A", 
+         "startTime": "10:00", 
+         "endTime": "11:00"
+     }, 
+     {
+         "name": "MATH20201/LEC/LEC/01", 
+         "location": {
+             "name": "Leacture Theatre 3", 
+             "description": ""
+         }, 
+         "description": "Algebraic Structures 1", 
+         "color": "#7fbefe", 
+         "duration": 60, 
+         "additionalText": "", 
+         "moduleName": "MATH20201", 
+         "activityType": "LECTURE", 
+         "weekLabels": "1-5, 7-12", 
+         "scheduledDay": 2, 
+         "moduleDescription": "Algebraic Structures 1", 
+         "startTime": "9:00", 
+         "endTime": "10:00"
+     }, 
+     {
+         "name": "MATH20701/LEC/LEC/01", 
+         "location": {
+             "name": "Leacture Theatre 4", 
+             "description": ""
+         }, 
+         "description": "Probability and Statistics", 
+         "color": "#d97ffe", 
+         "duration": 60, 
+         "additionalText": "", 
+         "moduleName": "MATH20701", 
+         "activityType": "LECTURE", 
+         "weekLabels": "1-5, 7-12", 
+         "scheduledDay": 3, 
+         "moduleDescription": "Probability and Statistics", 
+         "startTime": "10:00", 
+         "endTime": "11:00"
+     }, 
+     {
+         "name": "MATH20701/TUT/TUT4/01", 
+         "location": {
+             "name": "Tutorial Room 3", 
+             "description": ""
+         },
+         "description": "Probability and Statistics", 
+         "color": "#d97ffe", 
+         "duration": 60, 
+         "additionalText": "", 
+         "moduleName": "MATH20701", 
+         "activityType": "TUTORIAL", 
+         "weekLabels": "1-5, 7-12", 
+         "scheduledDay": 4, 
+         "moduleDescription": "Probability and Statistics", 
+         "startTime": "15:00", 
+         "endTime": "16:00"
+     }
+ ]

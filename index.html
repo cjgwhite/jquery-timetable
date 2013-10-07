@@ -17,180 +17,45 @@ and open the template in the editor.
         
         <script type="text/javascript">
             $(document).ready(function() {
-                
-                var activities = [
-                    [
-                        {
-                            startTime: "07:20",
-                            scheduledDay: 1,
-                            duration: 60,
-                            colour: "#E63C3C",
-                            title: "testing Mon 07:20 - 1hr"
-                        },
-                        {
-                            startTime: "07:20",
-                            scheduledDay: 4,
-                            duration: 120,
-                            colour: "#45D952",
-                            title: "testing Thur 07:20 - 2hrs"
-                        }, 
-                        
-                        {
-                            startTime: "07:20",
-                            scheduledDay: 4,
-                            duration: 180,
-                            colour: "#44E4DA",
-                            title: "testing ** Thur 07:20 - 3hrs"
-                        }, 
-                        {
-                            startTime: "09:40",
-                            scheduledDay: 4,
-                            duration: 180,
-                            colour: "#D172DD",
-                            title: "testing ** Thur 09:40 - 3hrs"
-                        }, 
-                        {
-                            startTime: "09:45",
-                            scheduledDay: 4,
-                            duration: 60,
-                            colour: "#E7F33E",
-                            title: "testing ** Thur 09:45 - 1hrs"
-                        }, 
-                        {
-                            startTime: "08:30",
-                            scheduledDay: 4,
-                            duration: 120,
-                            colour: "#EED532",
-                            title: "testing ** Thur 08:30 - 2hrs"
-                        }, 
-                        {
-                            startTime: "06:20",
-                            scheduledDay: 4,
-                            duration: 60,
-                            colour: "#FCEF34",
-                            title: "testing Thur 06:20 - 1hrs"
-                        }, 
-                        {
-                            startTime: "06:20",
-                            scheduledDay: 4,
-                            duration: 120,
-                            colour: "#1AE66B",
-                            title: "testing Thur 06:20 - 2hrs"
-                        },        
-                        
-                        {
-                            startTime: "11:50",
-                            scheduledDay: 4,
-                            duration: 30,
-                            colour: "#F2B528",
-                            title: "testing Thu 11:50 - 30 min"
-                        },
-                        {
-                            startTime: "09:20",
-                            scheduledDay: 6,
-                            duration: 120,
-                            colour: "#CBAB5F",
-                            title: "testing Sat 09:20 - 2hrs"
-                        }
-                        
-                    ],
-                    [
-                        {
-                            startTime: "13:20",
-                            scheduledDay: 1,
-                            duration: 60,
-                            colour: "#D6D5D2",
-                            title: "testing Mon 13:20 - 1hr"
-                        },{
-                            startTime: "10:00",
-                            scheduledDay: 2,
-                            duration: 40,
-                            colour: "#FA73E6",
-                            title: "testing Tue 10:00 - 40min"
-                        },{
-                            startTime: "16:50",
-                            scheduledDay: 3,
-                            duration: 180,
-                            colour: "#E789FA",
-                            title: "testing Wed 16:50 - 3hrs"
-                        },{
-                            startTime: "09:20",
-                            scheduledDay: 4,
-                            duration: 120,
-                            colour: "#52ADF7",
-                            title: "testing Thur 09:20 - 2hrs"
-                        },
-                        {
-                            startTime: "13:00",
-                            scheduledDay: 0,
-                            duration: 40,
-                            colour: "#59A6E4",
-                            title: "testing Sun 13:00 - 40min"
-                        }
-                        
-                    ]
                     
-                ];
-                    
-                    
-                    var ev = 0;
-                    
-                    var orientation = 0;
-                    var orientations = ['portrait', 'landscape'];
-                    
-                    
+                var orientation = 0;
+                var orientations = ['portrait', 'landscape'];
 
-                    
                 var timetable = $('.timetable').timetable({
-                    //activities: activities[ev],
-                    activities: function() {
-                        return activities[ev];
+                    activities: {
+                        url: "activities.json"
                     },
                     ActivityOptions: {
                         content: function() {
-                            var content = $("<div/>", {style: "white-space: nowrap;"}).html(this.title + "<br />" + this.hour + ":" + this.minute   + " - " + this.duration + " Minutes");
-
+                            var content = $('<h4>'+this.moduleName+'</h4>'
+                                + '<ol>'
+                                + '<li>'+this.location.name+'</li>'
+                                + '<li>'+this.activityType+'</li>'
+                                + '<li>Wks: '+this.weekLabels+'</li>'
+                                + '</ol>'    
+                            );
                             return content;
                         }
                     },
-
-                    orientation: orientations[ev]
-
+                    orientation: orientations[orientation]
                 }).data( "timetable" );
-
-/*
-                $(".timetable").mousedown(function(event) {
-                    switch (event.which) {
-                        case 1:
-                                orientation = 1-orientation;
-                                timetable.option(
-                                        {
-                                            orientation: orientations[orientation]
-                                        }
-                                );
-                            break;
-                        case 3:
-                               ev = 1-ev;
-                                timetable.option(
-                                        {
-                                            activities: activities[ev]
-                                        }
-                                );  
-                            break;
-                    }
-                    //event.stopPropagation();
-                    
-                });
-*/
                 
-                $('.timetable').bind("orientationChanged", function(evnt) {
-                    console.log("Orientation Changed :: " + evnt.newValue);
+                
+                $("#tt1").click(function() {
+                    timetable.render({
+                        url: "activities.json"
+                    });
+                });
+                $("#tt2").click(function() {
+                    timetable.render({
+                        url: "activities2.json"
+                    });
                 });
                 
-                $('.timetable').bind("activitiesChanged", function(evnt) {
-                    console.log("Activities Changed :: " + evnt.newValue);
+                $("#orientation").click(function() {
+                    orientation = 1-orientation;
+                    timetable.option("orientation", orientations[orientation]);
                 });
-                
             });
         </script>
     </head>
@@ -200,5 +65,11 @@ and open the template in the editor.
             <div class="timetable" style="width: 100%; height: 100%;">
             </div>
        </div>
+        <div class="controls">
+            <button id="tt1">Timetable 1</button>
+            <button id="tt2">Timetable 2</button>    
+            <button id="orientation">Toggle orientation</button>    
+        </div>
+        
     </body>
 </html>
