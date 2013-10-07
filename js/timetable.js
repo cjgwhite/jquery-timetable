@@ -585,7 +585,6 @@
                         this.activityObj.html(content());
                     } else
                         this.activityObj.html(content);
-                    this.container.append(this.activityObj);
                     this.container.trigger({
                         type: "activityAdded",
                         activity: this
@@ -597,15 +596,17 @@
                     this.activityObj.fadeOut("slow").remove();
                     $(this.container).off("activityAdded", this._onActivityAdded);
                 },
+                __activityCSSObj: {
+                    position: "absolute"
+                },
+                render: function() {
+                    this.container.append(this.activityObj);
+                    this.activityObj.css(this.__activityCSSObj);
+                },
                 resize: function() {
                     var dayIndex = this.dow - settings.startDay;
                     var hourIndex = this.hour - settings.startHour;
                     var hourOffset = (settings.hourSize / 60) * this.minute;
-
-                    var cssObj = {
-                        position: "absolute"
-                    };
-
 
                     var expandto = {
                         position: 1000000,
@@ -619,19 +620,15 @@
 
                     var activityWidth = (settings.daySize) / (this.sizeFactor);
 
-                    cssObj[posRef[this.orientation()].hour] = (hourIndex * settings.hourSize) + hourOffset + settings.titleSize;
-                    cssObj[posRef[this.orientation()].day] = (activityWidth * this.position) + this.activityMargin;
-                    cssObj[posRef[this.orientation()].size] = this.duration * (settings.hourSize / 60) - this.activityMargin;
+                    this.__activityCSSObj[posRef[this.orientation()].hour] = (hourIndex * settings.hourSize) + hourOffset + settings.titleSize;
+                    this.__activityCSSObj[posRef[this.orientation()].day] = (activityWidth * this.position) + this.activityMargin;
+                    this.__activityCSSObj[posRef[this.orientation()].size] = this.duration * (settings.hourSize / 60) - this.activityMargin;
                     if (expandto.sizeFactor > 0 && (activityWidth * this.position + activityWidth) != ((settings.daySize / expandto.sizeFactor) * expandto.position)) {
                         activityWidth += ((settings.daySize / expandto.sizeFactor) * expandto.position) - (activityWidth * this.position + activityWidth);
-                        cssObj[posRef[this.orientation()].nonsize] = activityWidth - this.activityMargin - 1;
+                        this.__activityCSSObj[posRef[this.orientation()].nonsize] = activityWidth - this.activityMargin - 1;
                     } else {
-                        cssObj[posRef[this.orientation()].nonsize] = activityWidth - (this.activityMargin * 2) - 1;
+                        this.__activityCSSObj[posRef[this.orientation()].nonsize] = activityWidth - (this.activityMargin * 2) - 1;
                     }
-
-                    this.activityObj.css(cssObj);
-                    var content = $.proxy(this.content, this);
-                    this.activityObj.html(content());
 
                 },
                 events: {
@@ -689,11 +686,17 @@
 
 
             $(container).on("tt.event.update", $.proxy(function() {
-                this.resize()
+                this.resize();
             }, A));
 
             $(container).on("tt.container.updated", function(event) {
                 A.resize();
+                A.render();
+                event.stopPropagation();
+            });
+
+            $(container).on("tt-activitiesRendered", function(event) {
+                A.render();
                 event.stopPropagation();
             });
 
