@@ -518,7 +518,7 @@
                         this.addOverlap(event.activity);
                         event.activity.addOverlap(this);
                     }
-                    this.container.trigger("tt.event.update");
+//                    this.container.trigger("tt.event.update");
                 },
                 overlapWith: function(activity) {
                     var thisTime = (this.hour * 60) + this.minute;
@@ -696,6 +696,7 @@
             });
 
             $(container).on("tt-activitiesRendered", function(event) {
+                A.resize();
                 A.render();
                 event.stopPropagation();
             });
