@@ -301,7 +301,7 @@
                 render: function() {
                     if (this.isDayView()) {
                         $('.tt-day', this.container).detach();
-                        this.container.append(this.days[this.viewDay]);
+                        this.container.append(this.days[this.viewDay].hide().fadeIn("fast"));
                         this.day = 1;
                     } else {
                         this.container.append(this.days.slice(settings.startDay, settings.endDay + 1));
@@ -622,7 +622,7 @@
 
                     this.__activityCSSObj[posRef[this.orientation()].hour] = (hourIndex * settings.hourSize) + hourOffset + settings.titleSize;
                     this.__activityCSSObj[posRef[this.orientation()].day] = (activityWidth * this.position) + this.activityMargin;
-                    this.__activityCSSObj[posRef[this.orientation()].size] = this.duration * (settings.hourSize / 60) - this.activityMargin;
+                    this.__activityCSSObj[posRef[this.orientation()].size] = this.duration * (settings.hourSize / 60) ;
                     if (expandto.sizeFactor > 0 && (activityWidth * this.position + activityWidth) != ((settings.daySize / expandto.sizeFactor) * expandto.position)) {
                         activityWidth += ((settings.daySize / expandto.sizeFactor) * expandto.position) - (activityWidth * this.position + activityWidth);
                         this.__activityCSSObj[posRef[this.orientation()].nonsize] = activityWidth - this.activityMargin - 1;
