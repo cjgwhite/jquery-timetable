@@ -714,12 +714,12 @@
             $.extend(true, MO, {
                 overlay: $("<div/>", {"class": "tt-overlay", style: "display: none;"}).append($("<div/>", {"class": "tt-message"}).html("No Message")),
                 init: function() {
-                    
+                    var index = (parseInt($(container).css("z-index")) | 0) + 10;
                     $(container).append(this.overlay);
 
                     $(this.overlay).css({
                         "position": "relative",
-                        "z-index": 1000
+                        "z-index": index
                     });
 
                     $(".tt-message", this.overlay).css({
