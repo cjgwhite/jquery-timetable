@@ -296,6 +296,8 @@
                         this.container.prepend(this.previousDay);
                         this.day = 1;
                     } else {
+                        this.nextDay.detach();
+                        this.previousDay.detach();
                         this.container.append(this.days.slice(settings.startDay, settings.endDay + 1));
                         this.day = settings.endDay - settings.startDay + 1;
                     }
