@@ -20,7 +20,7 @@
                 events: {}
             },
             daysOptions: {
-                events: {}
+                events: {},
             },
             ActivityOptions: {
                 mouseoverDelay: 500,
@@ -256,52 +256,44 @@
                     this.render();
                 },
                 touch: {},
-                move : 0,
-                __dayChangeEvents: {
-                    "touchstart": function(startEvent) {
-                        var touchStart = startEvent.originalEvent.touches[0].pageX;
-                        var touchMove = 0;
-                        var touchExceeded = false;
-                        $(this).on("touchmove", function(moveEvent) {
-                            var touchEnd = moveEvent.originalEvent.touches[0].pageX;
-                            touchMove = touchStart - touchEnd;
-                            if(Math.abs(touchMove) > 20) {
-                                moveEvent.preventDefault();
-                                touchExceeded = true;
-                            }
-                        });
-                        
-                        $(this).on("touchend touchcancel", function(endEvent) {
-                            if(touchExceeded) {
-                                endEvent.preventDefault();
-                                var step = touchMove / Math.abs(touchMove) // convert to +1 or -1
-                                DC.viewDay = Math.min(Math.max(DC.viewDay + step, settings.startDay), settings.endDay); // set viewDay changed
-                                DC.render();
-                            }
-                            $(this).off("touchmove touchend touchcancel");
-                        });
-                    }
-                    
+                move: 0,
+                nextDay: $('<div class="tt-mobNxtDay"></div>').bind("click touchstart", function(event) {
+                    DC.viewDay = Math.min(Math.max(DC.viewDay + 1, settings.startDay), settings.endDay);
+                    DC.render();
+                    event.preventDefault();
+                    return false;
+                }),
+                previousDay: $('<div class="tt-mobPrevDay"></div>').bind("click touchstart", function(event) {
+                    DC.viewDay = Math.min(Math.max(DC.viewDay - 1, settings.startDay), settings.endDay)
+                    DC.render();
+                    event.preventDefault();
+                    return false;
+                }),
+                _generateDayHeaders: function() {
+                    var days = [];
+                    $.each(this.dayNames[this.lang], function(index, day) {
+                        var $dayNode = $("<div/>", {"class": "tt-dayTitle"}).text(day);
+                        days.push($dayNode);
+                    });
+                    return days;
                 },
                 _generateDays: function() {
                     var eventHandlers = this.events;
-                    if (this.isMobile()) {
-                        eventHandlers = $.extend(this.__dayChangeEvents, eventHandlers);
-                    }
-                    return [
-                        $("<div/>", {"class": "tt-day"}).bind(eventHandlers).append($("<div/>", {"class": "tt-dayTitle"}).text(this.dayNames[this.lang][0])),
-                        $("<div/>", {"class": "tt-day"}).bind(eventHandlers).append($("<div/>", {"class": "tt-dayTitle"}).text(this.dayNames[this.lang][1])),
-                        $("<div/>", {"class": "tt-day"}).bind(eventHandlers).append($("<div/>", {"class": "tt-dayTitle"}).text(this.dayNames[this.lang][2])),
-                        $("<div/>", {"class": "tt-day"}).bind(eventHandlers).append($("<div/>", {"class": "tt-dayTitle"}).text(this.dayNames[this.lang][3])),
-                        $("<div/>", {"class": "tt-day"}).bind(eventHandlers).append($("<div/>", {"class": "tt-dayTitle"}).text(this.dayNames[this.lang][4])),
-                        $("<div/>", {"class": "tt-day"}).bind(eventHandlers).append($("<div/>", {"class": "tt-dayTitle"}).text(this.dayNames[this.lang][5])),
-                        $("<div/>", {"class": "tt-day"}).bind(eventHandlers).append($("<div/>", {"class": "tt-dayTitle"}).text(this.dayNames[this.lang][6]))
-                    ];
+
+                    var days = [];
+                    var dayHeaders = this._generateDayHeaders();
+                    $.each(dayHeaders, function(index, $day) {
+                        days.push($("<div/>", {"class": "tt-day"}).bind(eventHandlers).append($day));
+                    });
+
+                    return days;
                 },
                 render: function() {
                     if (this.isDayView()) {
                         $('.tt-day', this.container).detach();
                         this.container.append(this.days[this.viewDay].hide().fadeIn("fast"));
+                        this.container.prepend(this.nextDay);
+                        this.container.prepend(this.previousDay);
                         this.day = 1;
                     } else {
                         this.container.append(this.days.slice(settings.startDay, settings.endDay + 1));
@@ -347,7 +339,7 @@
                         toabort.abort();
                     if (this.ajaxOn !== null) {
                         this.ajaxOn.done(function(data) {
-                                $(container).trigger("tt-renderStart");
+                            $(container).trigger("tt-renderStart");
                         }).done($.proxy(this.__populateActivities, this)).fail(function() {
                             $(container).trigger("tt-activityLoadFailed");
                         });
@@ -622,7 +614,7 @@
 
                     this.__activityCSSObj[posRef[this.orientation()].hour] = (hourIndex * settings.hourSize) + hourOffset + settings.titleSize;
                     this.__activityCSSObj[posRef[this.orientation()].day] = (activityWidth * this.position) + this.activityMargin;
-                    this.__activityCSSObj[posRef[this.orientation()].size] = this.duration * (settings.hourSize / 60) ;
+                    this.__activityCSSObj[posRef[this.orientation()].size] = this.duration * (settings.hourSize / 60);
                     if (expandto.sizeFactor > 0 && (activityWidth * this.position + activityWidth) != ((settings.daySize / expandto.sizeFactor) * expandto.position)) {
                         activityWidth += ((settings.daySize / expandto.sizeFactor) * expandto.position) - (activityWidth * this.position + activityWidth);
                         this.__activityCSSObj[posRef[this.orientation()].nonsize] = activityWidth - this.activityMargin - 1;
@@ -757,9 +749,9 @@
                     });
                 }
             });
-            
-            
-            
+
+
+
             $(container).on("tt-noActivities", function() {
                 MO.show($.isFunction(settings.NoContentMsg) ? settings.NoContentMsg() : settings.NoContentMsg);
             });
@@ -778,13 +770,13 @@
             $(container).on("tt-activityLoadFailed", function(event) {
                 MO.show($.isFunction(settings.loadErrorMsg) ? settings.loadErrorMsg() : settings.loadErrorMsg);
             });
-        
+
             return MO;
         }
 
-        
 
-        
+
+
 
         var tt = createTimeTable();
 

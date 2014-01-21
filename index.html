@@ -56,6 +56,10 @@ and open the template in the editor.
                     orientation = 1-orientation;
                     timetable.option("orientation", orientations[orientation]);
                 });
+                
+                $('#dayView').click(function() {
+                    timetable.option("dayView", !timetable.option("dayView"));
+                });
             });
         </script>
     </head>
@@ -68,7 +72,8 @@ and open the template in the editor.
         <div class="controls">
             <button id="tt1">Timetable 1</button>
             <button id="tt2">Timetable 2</button>    
-            <button id="orientation">Toggle orientation</button>    
+            <button id="orientation">Toggle orientation</button>   
+            <button id="dayView">Toggle DayView</button>
         </div>
         
     </body>

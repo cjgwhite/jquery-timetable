@@ -40,6 +40,40 @@
     border-left: 1px solid gray;
     border-top: 1px solid gray;
 }
+
+
+.tt-mobPrevDay {
+    position:  absolute;
+    z-index: 100;
+    cursor: pointer;
+    left: 0;
+    top: 10px;
+    margin: 0;
+    padding: 0;
+    width: 30px;
+    height: 50px;
+    background-image: url("../img/resultset_previous.png");
+    background-repeat: no-repeat;
+    background-size: contain;
+    background-position: center center;
+}
+.tt-mobNxtDay {
+    position:  absolute;
+    z-index: 100;
+    cursor: pointer;
+    right: 0;
+    top: 10px;
+    margin: 0;
+    padding: 0;
+    width: 30px;
+    height: 50px;
+    background-image: url("../img/resultset_next.png");
+    background-repeat: no-repeat;
+    background-size: contain;
+    background-position: center center;    
+}
+
+
 .tt-hour {
     border-left: 1px dashed gray;
     border-top: 1px dashed gray;
