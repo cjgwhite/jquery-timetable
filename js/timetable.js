@@ -7,12 +7,13 @@
             dayViewThreshold: 300,
             minHourSize: 50,
             minDaySize: 50,
+            dayTitleSize: 75,
+            hourTitleSize: 75,
             startHour: 9,
             endHour: 17,
             startDay: 1,
             endDay: 5,
             activities: [],
-            titleSize: 75,
             NoContentMsg: "No Activities to Display",
             loadingMsg: "Loading...",
             loadErrorMsg: "An error occured loading the Timetable",
@@ -28,6 +29,7 @@
                 mouseoverMinWidth: 0,
                 mouseoverEasing: "easeOutElastic",
                 mouseoverSpeed: "normal",
+                zindex: 1000,
                 events: {}
             }
         };
@@ -85,14 +87,15 @@
                             };
                             $(this.container)
                                     .addClass("tt-container")
-                                    .css(cssObj);
+                                    .css(cssObj)
+                                    .attr("role", "grid");
                             if (this.isMobile()) {
                                 $(this.container).addClass("tt-mobile");
                             }
                         },
                         _init: function() {
-                            this.hoursContainer.init();
                             this.daysContainer.init();
+                            this.hoursContainer.init();
                             this.messageOverlay.init();
                             this.resize();
                         },
@@ -173,7 +176,7 @@
                     var aHours = new Array();
                     for (var hour = 0; hour < 24; hour++) {
                         var hourStr = (hour < 10) ? "0" + hour + "00" : hour + "00";
-                        aHours.push($("<div/>", {"class": "tt-hour", style: "width: 100%;"}).text(hourStr).on(this.events));
+                        aHours.push($("<div/>", {"class": "tt-hour", style: "width: 100%;", "aria-hidden": "true"}).text(hourStr).on(this.events));
                     }
                     return aHours;
                 },
@@ -183,19 +186,19 @@
                     this.resize();
                 },
                 resize: function() {
-                    settings.hourSize = (parseInt(this.container[posRef[this.orientation()].size]()) - settings.titleSize) / (this.hour);
+                    settings.hourSize = (parseInt(this.container[posRef[this.orientation()].size]()) - settings.dayTitleSize) / (this.hour);
                     settings.hourNumber = this.hour;
 
                     if (settings['minHourSize'] != null && settings.hourSize < settings.minHourSize) {
                         settings.hourSize = settings.minHourSize;
 
                         var cssObj = {};
-                        cssObj[posRef[this.orientation()].size] = (settings.hourSize * this.hour) + settings.titleSize;
+                        cssObj[posRef[this.orientation()].size] = (settings.hourSize * this.hour) + settings.dayTitleSize;
                         this.container.css(cssObj);
 
                     }
                     var size = settings.hourSize;
-                    var offset = settings.titleSize;
+                    var offset = settings.dayTitleSize;
                     var that = this;
                     $("div.tt-hour", this.container).each(function(index, el) {
                         var cssObj = {
@@ -272,7 +275,7 @@
                 _generateDayHeaders: function() {
                     var days = [];
                     $.each(this.dayNames[this.lang], function(index, day) {
-                        var $dayNode = $("<div/>", {"class": "tt-dayTitle"}).text(day);
+                        var $dayNode = $("<div/>", {"class": "tt-dayTitle", "role": "rowheader"}).text(day);
                         days.push($dayNode);
                     });
                     return days;
@@ -283,7 +286,7 @@
                     var days = [];
                     var dayHeaders = this._generateDayHeaders();
                     $.each(dayHeaders, function(index, $day) {
-                        days.push($("<div/>", {"class": "tt-day"}).bind(eventHandlers).append($day));
+                        days.push($("<div/>", {"class": "tt-day", "role": "row"}).bind(eventHandlers).append($day));
                     });
 
                     return days;
@@ -291,7 +294,7 @@
                 render: function() {
                     if (this.isDayView()) {
                         $('.tt-day', this.container).detach();
-                        this.container.append(this.days[this.viewDay].hide().fadeIn("fast"));
+                        this.container.prepend(this.days[this.viewDay].hide().fadeIn("fast"));
                         this.container.prepend(this.nextDay);
                         this.container.prepend(this.previousDay);
                         this.day = 1;
@@ -369,19 +372,19 @@
                     activity._attach();
                 },
                 resize: function() {
-                    settings.daySize = (parseInt(this.container[posRef[this.orientation()].size]()) - settings.titleSize) / this.day;
+                    settings.daySize = (parseInt(this.container[posRef[this.orientation()].size]()) - settings.hourTitleSize) / this.day;
 
                     if (settings['minDaySize'] != null && settings.daySize < settings.minDaySize) {
                         settings.daySize = settings.minDaySize;
 
                         var cssObj = {};
-                        cssObj[posRef[this.orientation()].size] = (settings.daySize * this.day) + settings.titleSize;
+                        cssObj[posRef[this.orientation()].size] = (settings.daySize * this.day) + settings.hourTitleSize;
                         this.container.css(cssObj);
 
                     }
 
                     var size = settings.daySize;
-                    var offset = settings.titleSize;
+                    var offset = settings.hourTitleSize;
 
                     settings.dayNumber = this.day;
 
@@ -403,7 +406,7 @@
                     };
 
                     titlePos[posRef[that.orientation()].size] = "100%";
-                    titlePos[posRef[that.orientation()].nonsize] = settings.titleSize;
+                    titlePos[posRef[that.orientation()].nonsize] = settings.dayTitleSize;
                     var hidden = $("<span/>", {style: "visibility:hidden;width:auto;height:auto;font-size:5px;"});
                     hidden.text(this.dayNames[this.lang][0]);
                     $(this.container).append(hidden);
@@ -411,7 +414,7 @@
                         "width": hidden.width(),
                         "height": hidden.height()
                     };
-                    while (hiddenSize[posRef[that.orientation()].size] < size / 2 && hiddenSize[posRef[that.orientation()].nonsize] < settings.titleSize / 2) {
+                    while (hiddenSize[posRef[that.orientation()].size] < size / 2 && hiddenSize[posRef[that.orientation()].nonsize] < settings.dayTitleSize / 2) {
                         var fs = parseInt(hidden.css("font-size"), 10);
                         hidden.css({
                             "font-size": (fs + 1) + "px"
@@ -426,7 +429,7 @@
                     $('div.tt-dayTitle', this.container).each(function(index, el) {
                         $(this).css(titlePos);
                         $(this).css({
-                            "line-height": $(this).height() + "px"
+                            "line-height": settings.dayTitleSize + "px"
                         });
                     });
 
@@ -463,7 +466,12 @@
                 scheduledDay: 0,
                 duration: 60,
                 activityMargin: 0,
-                activityObj: $("<div/>", {"class": "tt-activity", style: "position: relative; display: none; overflow: hidden;", "tabindex": 0}),
+                activityObj: $("<div/>", {
+                    "class": "tt-activity",
+                    style: "position: relative; display: none; overflow: hidden; z-index: " + settings.ActivityOptions.zindex,
+                    "role": "gridcell",
+                    "tabindex": 0
+                }),
                 _init: function() {
 
                     var start = this.startTime.split(":");
@@ -614,7 +622,7 @@
 
                     var activityWidth = (settings.daySize) / (this.sizeFactor);
 
-                    this.__activityCSSObj[posRef[this.orientation()].hour] = (hourIndex * settings.hourSize) + hourOffset + settings.titleSize;
+                    this.__activityCSSObj[posRef[this.orientation()].hour] = (hourIndex * settings.hourSize) + hourOffset + settings.dayTitleSize;
                     this.__activityCSSObj[posRef[this.orientation()].day] = (activityWidth * this.position) + this.activityMargin;
                     this.__activityCSSObj[posRef[this.orientation()].size] = this.duration * (settings.hourSize / 60);
                     if (expandto.sizeFactor > 0 && (activityWidth * this.position + activityWidth) != ((settings.daySize / expandto.sizeFactor) * expandto.position)) {
@@ -636,9 +644,11 @@
                             content.oldT = position.top;
                             content.oldL = position.left;
                             this.to = setTimeout(function() {
-                                var css = {};
+                                var css = {
+                                    "z-index": settings.ActivityOptions.zindex+2
+                                };
                                 $(content).css({
-                                    "z-index": 1000,
+                                    "z-index": settings.ActivityOptions.zindex+2,
                                     "box-shadow": "0 6px 10px rgba(0,0,0,0.75)"
                                 });
                                 var width = Math.max(content.scrollWidth, defaultOptions.ActivityOptions.mouseoverMinWidth) + 5;
@@ -655,6 +665,7 @@
                                 }
 
                                 $(content).animate(css, defaultOptions.ActivityOptions.mouseoverSpeed, defaultOptions.ActivityOptions.mouseoverEasing);
+                                $(content).addClass('tt-activity-expanded');
 
                             }, defaultOptions.ActivityOptions.mouseoverDelay);
                         }
@@ -663,12 +674,20 @@
                         clearTimeout(this.to);
                         if (this.expanded == true) {
                             this.expanded = false;
+                            var css = {
+                                width: this.oldW,
+                                height: this.oldH,
+                                top: this.oldT,
+                                left: this.oldL,
+                                "z-index": settings.ActivityOptions.zindex
+                            };
+
                             $(this).css({
-                                "z-index": 0,
                                 "box-shadow": "none"
                             });
 
-                            $(this).animate({width: this.oldW, height: this.oldH, top: this.oldT, left: this.oldL, "z-index": 0}, defaultOptions.ActivityOptions.mouseoverSpeed, defaultOptions.ActivityOptions.mouseoverEasing);
+                            $(this).animate(css, defaultOptions.ActivityOptions.mouseoverSpeed, defaultOptions.ActivityOptions.mouseoverEasing);
+                            $(this).removeClass('tt-activity-expanded');
 
                         }
                     }
@@ -708,12 +727,11 @@
             $.extend(true, MO, {
                 overlay: $("<div/>", {"class": "tt-overlay", style: "display: none;"}).append($("<div/>", {"class": "tt-message"}).html("No Message")),
                 init: function() {
-                    var index = (parseInt($(container).css("z-index")) | 0) + 10;
                     $(container).append(this.overlay);
 
                     $(this.overlay).css({
                         "position": "relative",
-                        "z-index": index
+                        "z-index": settings.ActivityOptions.zindex + 10
                     });
 
                     $(".tt-message", this.overlay).css({
@@ -791,8 +809,8 @@
             $(this.container).trigger("tt.update");
         }, tt));
         $(container).on("tt.update", $.proxy(function(event) {
-            this.hoursContainer.render();
             this.daysContainer.render();
+            this.hoursContainer.render();
             $(container).trigger("tt.container.updated");
             event.stopPropagation();
         }, tt));
