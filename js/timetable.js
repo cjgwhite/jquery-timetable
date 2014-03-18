@@ -12,6 +12,7 @@
             startHour: 9,
             endHour: 17,
             nowLineEnable: true,
+            amPm: false,
             startDay: 1,
             endDay: 5,
             activities: [],
@@ -176,10 +177,28 @@
                     this.render();
                 },
                 _generateHours: function() {
-                    var aHours = new Array();
-                    for (var hour = 0; hour < 24; hour++) {
-                        var hourStr = (hour < 10) ? "0" + hour + "00" : hour + "00";
-                        aHours.push($("<div/>", {"class": "tt-hour", style: "width: 100%;", "aria-hidden": "true"}).text(hourStr).on(this.events));
+                    var aHours = new Array(),
+                        hour,
+                        hourTitle;
+
+                    if( settings.amPm ){
+                        for (hour = 0; hour < 24; hour++) {
+                            hourTitle = $("<div/>", {"class": "tt-hourTitle"}).text(
+                                (hour === 0 ? "12 " :
+                                (hour > 12 ? (hour - 12)+" " : hour+" ")) +
+                                (hour > 11 ? "PM" : "AM")
+                            );
+                            aHours.push($("<div/>", {"class": "tt-hour", style: "width: 100%;", "aria-hidden": "true"})
+                              .append(hourTitle).on(this.events));
+                        }
+                    } else {
+                        for (hour = 0; hour < 24; hour++) {
+                            hourTitle = $("<div/>", {"class": "tt-hourTitle"}).text(
+                                (hour < 10) ? "0" + hour + "00" : hour + "00"
+                            );
+                            aHours.push($("<div/>", {"class": "tt-hour", style: "width: 100%;", "aria-hidden": "true"})
+                              .append(hourTitle).on(this.events));
+                        }
                     }
                     return aHours;
                 },
