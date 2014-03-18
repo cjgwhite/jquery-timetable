@@ -11,6 +11,7 @@
             hourTitleSize: 75,
             startHour: 9,
             endHour: 17,
+            nowLineEnable: true,
             startDay: 1,
             endDay: 5,
             activities: [],
@@ -80,6 +81,7 @@
                         hoursContainer: new HoursContainer(),
                         daysContainer: new DaysContainer(),
                         messageOverlay: new MessageOverlay(),
+                        nowLine: new NowLine(),
                         name: "timetable",
                         _create: function() {
                             var cssObj = {
@@ -97,6 +99,7 @@
                             this.daysContainer.init();
                             this.hoursContainer.init();
                             this.messageOverlay.init();
+                            this.nowLine.init();
                             this.resize();
                         },
                         option: function(key, value) {
@@ -447,6 +450,65 @@
 
             return DC;
         };
+
+
+        var NowLine = function() {
+            var NL = new OptionsDependant(container);
+
+            var posRef = {
+                landscape: {
+                    size: "width",
+                    nonsize: "height",
+                    position: "left",
+                    nonposition: "top"
+                },
+                portrait: {
+                    size: "height",
+                    nonsize: "width",
+                    position: "top",
+                    nonposition: "left"
+                }
+            };
+
+            $.extend(true, NL, {
+                now: new Date(),
+                init: function() {
+                    var that = this;
+                    if( settings.nowLineEnable && this.isDayView() ) {
+                        this.container.on("tt.dayChange", function(){
+                            if( that.container.find('.tt-today')[0] ) {
+                                that.render();
+                            }
+                        });
+                    }
+                },
+                render: function() {
+                    var hourIndex = this.now.getHours() - settings.startHour,
+                        hourOffset = (settings.hourSize / 60) * this.now.getMinutes();
+
+                    if( this.element ) {
+                        this.element.remove();
+                    }
+                    if( this.now.getHours() >= settings.startHour &&
+                        this.now.getHours() <= settings.endHour )
+                    {
+                        cssObj = {
+                            "position": "absolute",
+                            "z-index": settings.ActivityOptions.zindex+1
+                        };
+                        cssObj[posRef[this.orientation()].size] = "2px";
+                        cssObj[posRef[this.orientation()].nonsize] = "100%";
+                        cssObj[posRef[this.orientation()].position] = (hourIndex * settings.hourSize) + hourOffset + settings.dayTitleSize;
+                        console.log(cssObj);
+
+                        this.element = $("<div/>", { "class": "tt-nowLine", "aria-hidden": "true" }).css(cssObj);
+                        this.container.find('.tt-today').append(this.element);
+                    }
+                }
+            });
+
+            return NL;
+        }
 
         var Activity = function(activityContainer, data) {
             var A = new OptionsDependant(activityContainer);
@@ -818,6 +880,9 @@
         $(container).on("tt.update", $.proxy(function(event) {
             this.daysContainer.render();
             this.hoursContainer.render();
+            if( settings.nowLineEnable ) {
+              this.nowLine.render();
+            }
             $(container).trigger("tt.container.updated");
             event.stopPropagation();
         }, tt));

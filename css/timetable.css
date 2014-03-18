@@ -43,6 +43,10 @@
 .tt-today {
     background-color: #f0f0f0;
 }
+.tt-nowLine {
+    background-color: red;
+    background-color: rgba(255, 0, 0, .5);
+}
 
 
 .tt-mobPrevDay {
