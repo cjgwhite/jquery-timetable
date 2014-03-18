@@ -7,12 +7,16 @@
             dayViewThreshold: 300,
             minHourSize: 50,
             minDaySize: 50,
+            dayTitleSize: 75,
+            dayTitleCalcFontSize: true,
+            hourTitleSize: 75,
             startHour: 9,
             endHour: 17,
+            nowLine: true,
+            amPm: false,
             startDay: 1,
             endDay: 5,
             activities: [],
-            titleSize: 75,
             NoContentMsg: "No Activities to Display",
             loadingMsg: "Loading...",
             loadErrorMsg: "An error occured loading the Timetable",
@@ -20,20 +24,23 @@
                 events: {}
             },
             daysOptions: {
-                events: {},
+                events: {}
             },
             ActivityOptions: {
                 mouseoverDelay: 500,
                 mouseoverMinHeight: 0,
                 mouseoverMinWidth: 0,
+                mouseoverAnimation: true,
                 mouseoverEasing: "easeOutElastic",
                 mouseoverSpeed: "normal",
+                zindex: 1000,
                 events: {}
             }
         };
 
+        container = $(container);
         var OptionsDependant = function(container) {
-            this.container = $(container);
+            this.container = container;
         };
 
         var settings = $.extend(true, defaultOptions, options);
@@ -78,22 +85,25 @@
                         hoursContainer: new HoursContainer(),
                         daysContainer: new DaysContainer(),
                         messageOverlay: new MessageOverlay(),
+                        nowLine: new NowLine(),
                         name: "timetable",
                         _create: function() {
                             var cssObj = {
                                 "position": "relative"
                             };
-                            $(this.container)
+                            this.container
                                     .addClass("tt-container")
-                                    .css(cssObj);
+                                    .css(cssObj)
+                                    .attr("role", "grid");
                             if (this.isMobile()) {
-                                $(this.container).addClass("tt-mobile");
+                                this.container.addClass("tt-mobile");
                             }
                         },
                         _init: function() {
-                            this.hoursContainer.init();
                             this.daysContainer.init();
+                            this.hoursContainer.init();
                             this.messageOverlay.init();
+                            this.nowLine.init();
                             this.resize();
                         },
                         option: function(key, value) {
@@ -136,7 +146,7 @@
                         },
                         resize: function() {
 
-                            $(this.container).trigger("tt.update");
+                            this.container.trigger("tt.update");
 
                         }
                     }
@@ -170,10 +180,28 @@
                     this.render();
                 },
                 _generateHours: function() {
-                    var aHours = new Array();
-                    for (var hour = 0; hour < 24; hour++) {
-                        var hourStr = (hour < 10) ? "0" + hour + "00" : hour + "00";
-                        aHours.push($("<div/>", {"class": "tt-hour", style: "width: 100%;"}).text(hourStr).on(this.events));
+                    var aHours = new Array(),
+                        hour,
+                        hourTitle;
+
+                    if( settings.amPm ){
+                        for (hour = 0; hour < 24; hour++) {
+                            hourTitle = $("<div/>", {"class": "tt-hourTitle"}).text(
+                                (hour === 0 ? "12 " :
+                                (hour > 12 ? (hour - 12)+" " : hour+" ")) +
+                                (hour > 11 ? "PM" : "AM")
+                            );
+                            aHours.push($("<div/>", {"class": "tt-hour", style: "width: 100%;", "aria-hidden": "true"})
+                              .append(hourTitle).on(this.events));
+                        }
+                    } else {
+                        for (hour = 0; hour < 24; hour++) {
+                            hourTitle = $("<div/>", {"class": "tt-hourTitle"}).text(
+                                (hour < 10) ? "0" + hour + "00" : hour + "00"
+                            );
+                            aHours.push($("<div/>", {"class": "tt-hour", style: "width: 100%;", "aria-hidden": "true"})
+                              .append(hourTitle).on(this.events));
+                        }
                     }
                     return aHours;
                 },
@@ -183,19 +211,19 @@
                     this.resize();
                 },
                 resize: function() {
-                    settings.hourSize = (parseInt(this.container[posRef[this.orientation()].size]()) - settings.titleSize) / (this.hour);
+                    settings.hourSize = (parseInt(this.container[posRef[this.orientation()].size]()) - settings.dayTitleSize) / (this.hour);
                     settings.hourNumber = this.hour;
 
                     if (settings['minHourSize'] != null && settings.hourSize < settings.minHourSize) {
                         settings.hourSize = settings.minHourSize;
 
                         var cssObj = {};
-                        cssObj[posRef[this.orientation()].size] = (settings.hourSize * this.hour) + settings.titleSize;
+                        cssObj[posRef[this.orientation()].size] = (settings.hourSize * this.hour) + settings.dayTitleSize;
                         this.container.css(cssObj);
 
                     }
                     var size = settings.hourSize;
-                    var offset = settings.titleSize;
+                    var offset = settings.dayTitleSize;
                     var that = this;
                     $("div.tt-hour", this.container).each(function(index, el) {
                         var cssObj = {
@@ -272,18 +300,25 @@
                 _generateDayHeaders: function() {
                     var days = [];
                     $.each(this.dayNames[this.lang], function(index, day) {
-                        var $dayNode = $("<div/>", {"class": "tt-dayTitle"}).text(day);
+                        var $dayNode = $("<div/>", {"class": "tt-dayTitle", "role": "rowheader"}).text(day);
                         days.push($dayNode);
                     });
                     return days;
                 },
                 _generateDays: function() {
-                    var eventHandlers = this.events;
-
-                    var days = [];
-                    var dayHeaders = this._generateDayHeaders();
+                    var eventHandlers = this.events,
+                        days = [],
+                        today = (new Date()).getDay(),
+                        dayHeaders = this._generateDayHeaders();
                     $.each(dayHeaders, function(index, $day) {
-                        days.push($("<div/>", {"class": "tt-day"}).bind(eventHandlers).append($day));
+                        days.push(
+                            $("<div/>", {
+                                "class": "tt-day" + (today === index ? " tt-today" : ""),
+                                "role": "row"
+                            })
+                            .on(eventHandlers)
+                            .append($day)
+                        );
                     });
 
                     return days;
@@ -291,7 +326,7 @@
                 render: function() {
                     if (this.isDayView()) {
                         $('.tt-day', this.container).detach();
-                        this.container.append(this.days[this.viewDay].hide().fadeIn("fast"));
+                        this.container.prepend(this.days[this.viewDay].hide().fadeIn("fast"));
                         this.container.prepend(this.nextDay);
                         this.container.prepend(this.previousDay);
                         this.day = 1;
@@ -341,9 +376,9 @@
                         toabort.abort();
                     if (this.ajaxOn !== null) {
                         this.ajaxOn.done(function(data) {
-                            $(container).trigger("tt-renderStart");
+                            container.trigger("tt-renderStart");
                         }).done($.proxy(this.__populateActivities, this)).fail(function() {
-                            $(container).trigger("tt-activityLoadFailed");
+                            container.trigger("tt-activityLoadFailed");
                         });
 
                     }
@@ -358,9 +393,9 @@
 
                             this.daysActivities.push(activity);
                         }, this));
-                        $(container).trigger("tt-activitiesRendered");
+                        container.trigger("tt-activitiesRendered");
                     } else {
-                        $(container).trigger("tt-noActivities");
+                        container.trigger("tt-noActivities");
                     }
                 },
                 addActivity: function(activity) {
@@ -369,19 +404,19 @@
                     activity._attach();
                 },
                 resize: function() {
-                    settings.daySize = (parseInt(this.container[posRef[this.orientation()].size]()) - settings.titleSize) / this.day;
+                    settings.daySize = (parseInt(this.container[posRef[this.orientation()].size]()) - settings.hourTitleSize) / this.day;
 
                     if (settings['minDaySize'] != null && settings.daySize < settings.minDaySize) {
                         settings.daySize = settings.minDaySize;
 
                         var cssObj = {};
-                        cssObj[posRef[this.orientation()].size] = (settings.daySize * this.day) + settings.titleSize;
+                        cssObj[posRef[this.orientation()].size] = (settings.daySize * this.day) + settings.hourTitleSize;
                         this.container.css(cssObj);
 
                     }
 
                     var size = settings.daySize;
-                    var offset = settings.titleSize;
+                    var offset = settings.hourTitleSize;
 
                     settings.dayNumber = this.day;
 
@@ -402,41 +437,101 @@
                         "text-align": "center"
                     };
 
-                    titlePos[posRef[that.orientation()].size] = "100%";
-                    titlePos[posRef[that.orientation()].nonsize] = settings.titleSize;
-                    var hidden = $("<span/>", {style: "visibility:hidden;width:auto;height:auto;font-size:5px;"});
-                    hidden.text(this.dayNames[this.lang][0]);
-                    $(this.container).append(hidden);
-                    var hiddenSize = {
-                        "width": hidden.width(),
-                        "height": hidden.height()
-                    };
-                    while (hiddenSize[posRef[that.orientation()].size] < size / 2 && hiddenSize[posRef[that.orientation()].nonsize] < settings.titleSize / 2) {
-                        var fs = parseInt(hidden.css("font-size"), 10);
-                        hidden.css({
-                            "font-size": (fs + 1) + "px"
+                    if( settings.dayTitleCalcFontSize ) {
+                        titlePos[posRef[that.orientation()].size] = "100%";
+                        titlePos[posRef[that.orientation()].nonsize] = settings.dayTitleSize;
+                        var hidden = $("<span/>", {style: "visibility:hidden;width:auto;height:auto;font-size:5px;"});
+                        hidden.text(this.dayNames[this.lang][0]);
+                        this.container.append(hidden);
+                        var hiddenSize = {
+                            "width": hidden.width(),
+                            "height": hidden.height()
+                        };
+                        while (hiddenSize[posRef[that.orientation()].size] < size / 2 && hiddenSize[posRef[that.orientation()].nonsize] < settings.dayTitleSize/ 2) {
+                            var fs = parseInt(hidden.css("font-size"), 10);
+                            hidden.css({
+                                "font-size": (fs + 1) + "px"
+                            });
+                            hiddenSize.width = hidden.width();
+                            hiddenSize.height = hidden.height();
+                        }
+                        titlePos["font-size"] = hidden.css("font-size");
+
+                        hidden.remove();
+
+                        $('div.tt-dayTitle', this.container).each(function(index, el) {
+                            $(this).css(titlePos);
+                            $(this).css({
+                                "line-height": settings.dayTitleSize + "px"
+                            });
                         });
-                        hiddenSize.width = hidden.width();
-                        hiddenSize.height = hidden.height();
                     }
-                    titlePos["font-size"] = hidden.css("font-size");
-
-                    hidden.remove();
-
-                    $('div.tt-dayTitle', this.container).each(function(index, el) {
-                        $(this).css(titlePos);
-                        $(this).css({
-                            "line-height": $(this).height() + "px"
-                        });
-                    });
 
                 }
             }, settings.daysOptions);
 
-            $(container).on("tt-activitiesChanged", $.proxy(DC.renderActivities, DC));
+            container.on("tt-activitiesChanged", $.proxy(DC.renderActivities, DC));
 
             return DC;
         };
+
+
+        var NowLine = function() {
+            var NL = new OptionsDependant(container);
+
+            var posRef = {
+                landscape: {
+                    size: "width",
+                    nonsize: "height",
+                    position: "left",
+                    nonposition: "top"
+                },
+                portrait: {
+                    size: "height",
+                    nonsize: "width",
+                    position: "top",
+                    nonposition: "left"
+                }
+            };
+
+            $.extend(true, NL, {
+                now: new Date(),
+                init: function() {
+                    var that = this;
+                    if( settings.nowLine && this.isDayView() ) {
+                        this.container.on("tt.dayChange", function(){
+                            if( that.container.find('.tt-today')[0] ) {
+                                that.render();
+                            }
+                        });
+                    }
+                },
+                render: function() {
+                    var hourIndex = this.now.getHours() - settings.startHour,
+                        hourOffset = (settings.hourSize / 60) * this.now.getMinutes();
+
+                    if( this.element ) {
+                        this.element.remove();
+                    }
+                    if( this.now.getHours() >= settings.startHour &&
+                        this.now.getHours() <= settings.endHour )
+                    {
+                        cssObj = {
+                            "position": "absolute",
+                            "z-index": settings.ActivityOptions.zindex+1
+                        };
+                        cssObj[posRef[this.orientation()].size] = "2px";
+                        cssObj[posRef[this.orientation()].nonsize] = "100%";
+                        cssObj[posRef[this.orientation()].position] = (hourIndex * settings.hourSize) + hourOffset + settings.dayTitleSize;
+
+                        this.element = $("<div/>", { "class": "tt-nowLine", "aria-hidden": "true" }).css(cssObj);
+                        this.container.find('.tt-today').append(this.element);
+                    }
+                }
+            });
+
+            return NL;
+        }
 
         var Activity = function(activityContainer, data) {
             var A = new OptionsDependant(activityContainer);
@@ -463,7 +558,12 @@
                 scheduledDay: 0,
                 duration: 60,
                 activityMargin: 0,
-                activityObj: $("<div/>", {"class": "tt-activity", style: "position: relative; display: none; overflow: hidden;", "tabindex": 0}),
+                activityObj: $("<div/>", {
+                    "class": "tt-activity",
+                    style: "position: relative; display: none; overflow: hidden; z-index: " + settings.ActivityOptions.zindex,
+                    "role": "gridcell",
+                    "tabindex": 0
+                }),
                 _init: function() {
 
                     var start = this.startTime.split(":");
@@ -493,13 +593,15 @@
 
 
                     if (changed === true) {
-                        $(container).trigger("tt.update");
+                        container.trigger("tt.update");
                     } else {
                         this.resize();
                     }
 
                     this._setColour();
-                    $(this.container).on("activityAdded", $.proxy(this._onActivityAdded, this));
+                    this.container.on("activityAdded", $.proxy(this._onActivityAdded, this));
+
+                    this.activityObj.data("activity", this);
 
                 },
                 overlaps: new Array(),
@@ -588,7 +690,7 @@
                 },
                 remove: function() {
                     this.activityObj.fadeOut("slow").remove();
-                    $(this.container).off("activityAdded", this._onActivityAdded);
+                    this.container.off("activityAdded", this._onActivityAdded);
                 },
                 __activityCSSObj: {
                     position: "absolute"
@@ -614,7 +716,7 @@
 
                     var activityWidth = (settings.daySize) / (this.sizeFactor);
 
-                    this.__activityCSSObj[posRef[this.orientation()].hour] = (hourIndex * settings.hourSize) + hourOffset + settings.titleSize;
+                    this.__activityCSSObj[posRef[this.orientation()].hour] = (hourIndex * settings.hourSize) + hourOffset + settings.dayTitleSize;
                     this.__activityCSSObj[posRef[this.orientation()].day] = (activityWidth * this.position) + this.activityMargin;
                     this.__activityCSSObj[posRef[this.orientation()].size] = this.duration * (settings.hourSize / 60);
                     if (expandto.sizeFactor > 0 && (activityWidth * this.position + activityWidth) != ((settings.daySize / expandto.sizeFactor) * expandto.position)) {
@@ -636,13 +738,15 @@
                             content.oldT = position.top;
                             content.oldL = position.left;
                             this.to = setTimeout(function() {
-                                var css = {};
+                                var css = {
+                                    "z-index": settings.ActivityOptions.zindex+2
+                                };
                                 $(content).css({
-                                    "z-index": 1000,
+                                    "z-index": settings.ActivityOptions.zindex+2,
                                     "box-shadow": "0 6px 10px rgba(0,0,0,0.75)"
                                 });
-                                var width = Math.max(content.scrollWidth, defaultOptions.ActivityOptions.mouseoverMinWidth) + 5;
-                                var height = Math.max(content.scrollHeight, defaultOptions.ActivityOptions.mouseoverMinHeight);
+                                var width = Math.max(content.scrollWidth, settings.ActivityOptions.mouseoverMinWidth) + 5;
+                                var height = Math.max(content.scrollHeight, settings.ActivityOptions.mouseoverMinHeight);
                                 var diffH = height - content.oldH;
                                 var diffW = width - content.oldW;
                                 if (diffH > 0) {
@@ -654,21 +758,38 @@
                                     css['width'] = "+=" + diffW;
                                 }
 
-                                $(content).animate(css, defaultOptions.ActivityOptions.mouseoverSpeed, defaultOptions.ActivityOptions.mouseoverEasing);
+                                if( settings.ActivityOptions.mouseoverAnimation ){
+                                    $(content).animate(css, settings.ActivityOptions.mouseoverSpeed, settings.ActivityOptions.mouseoverEasing);
+                                } else {
+                                    $(content).css(css);
+                                }
+                                $(content).addClass('tt-activity-expanded');
 
-                            }, defaultOptions.ActivityOptions.mouseoverDelay);
+                            }, settings.ActivityOptions.mouseoverDelay);
                         }
                     },
                     "blur mouseleave": function() {
                         clearTimeout(this.to);
                         if (this.expanded == true) {
                             this.expanded = false;
+                            var css = {
+                                width: this.oldW,
+                                height: this.oldH,
+                                top: this.oldT,
+                                left: this.oldL,
+                                "z-index": settings.ActivityOptions.zindex
+                            };
+
                             $(this).css({
-                                "z-index": 0,
                                 "box-shadow": "none"
                             });
 
-                            $(this).animate({width: this.oldW, height: this.oldH, top: this.oldT, left: this.oldL, "z-index": 0}, defaultOptions.ActivityOptions.mouseoverSpeed, defaultOptions.ActivityOptions.mouseoverEasing);
+                            if( settings.ActivityOptions.mouseoverAnimation ){
+                                $(this).animate(css, settings.ActivityOptions.mouseoverSpeed, settings.ActivityOptions.mouseoverEasing);
+                            } else {
+                                $(this).css(css);
+                            }
+                            $(this).removeClass('tt-activity-expanded');
 
                         }
                     }
@@ -679,17 +800,17 @@
 
 
 
-            $(container).on("tt.event.update", $.proxy(function() {
+            container.on("tt.event.update", $.proxy(function() {
                 this.resize();
             }, A));
 
-            $(container).on("tt.container.updated", function(event) {
+            container.on("tt.container.updated", function(event) {
                 A.resize();
                 A.render();
                 event.stopPropagation();
             });
 
-            $(container).on("tt-activitiesRendered", function(event) {
+            container.on("tt-activitiesRendered", function(event) {
                 A.resize();
                 A.render();
                 event.stopPropagation();
@@ -708,12 +829,11 @@
             $.extend(true, MO, {
                 overlay: $("<div/>", {"class": "tt-overlay", style: "display: none;"}).append($("<div/>", {"class": "tt-message"}).html("No Message")),
                 init: function() {
-                    var index = (parseInt($(container).css("z-index")) | 0) + 10;
-                    $(container).append(this.overlay);
+                    this.container.append(this.overlay);
 
                     $(this.overlay).css({
                         "position": "relative",
-                        "z-index": index
+                        "z-index": settings.ActivityOptions.zindex + 10
                     });
 
                     $(".tt-message", this.overlay).css({
@@ -731,8 +851,8 @@
                     this.overlay.fadeOut();
                 },
                 resize: function() {
-                    var width = $(container).width();
-                    var height = $(container).height();
+                    var width = this.container.width();
+                    var height = this.container.height();
                     var top = 0;
                     var left = 0;
 
@@ -745,8 +865,8 @@
 
                     var overlayMsg = $(".tt-message", this.overlay);
                     overlayMsg.css({
-                        top: ($(container).height() - overlayMsg.height()) / 2,
-                        left: ($(container).width() - overlayMsg.width()) / 2
+                        top: (this.container.height() - overlayMsg.height()) / 2,
+                        left: (this.container.width() - overlayMsg.width()) / 2
 
                     });
                 }
@@ -754,22 +874,22 @@
 
 
 
-            $(container).on("tt-noActivities", function() {
+            container.on("tt-noActivities", function() {
                 MO.show($.isFunction(settings.NoContentMsg) ? settings.NoContentMsg() : settings.NoContentMsg);
             });
-            $(container).on("tt.container.updated", function(event) {
+            container.on("tt.container.updated", function(event) {
                 MO.resize();
             });
-            $(container).on("tt-activitiesRendered", function(event) {
+            container.on("tt-activitiesRendered", function(event) {
                 MO.hide();
             });
-            $(container).on("tt-activitiesLoading", function(event) {
+            container.on("tt-activitiesLoading", function(event) {
                 MO.show($.isFunction(settings.loadingMsg) ? settings.loadingMsg() : settings.loadingMsg);
             });
-            $(container).on("tt-renderStart", function(event) {
+            container.on("tt-renderStart", function(event) {
                 MO.show("Rendering Timetable");
             });
-            $(container).on("tt-activityLoadFailed", function(event) {
+            container.on("tt-activityLoadFailed", function(event) {
                 MO.show($.isFunction(settings.loadErrorMsg) ? settings.loadErrorMsg() : settings.loadErrorMsg);
             });
 
@@ -785,18 +905,21 @@
 
         // attach event Handlers
         $(window).on("resize", $.proxy(function() {
-            $(this.container).trigger("tt.update");
+            this.container.trigger("tt.update");
         }, tt));
-        $(container).on("tt.changed", $.proxy(function(event) {
-            $(this.container).trigger("tt.update");
+        container.on("tt.changed", $.proxy(function(event) {
+            this.container.trigger("tt.update");
         }, tt));
-        $(container).on("tt.update", $.proxy(function(event) {
-            this.hoursContainer.render();
+        container.on("tt.update", $.proxy(function(event) {
             this.daysContainer.render();
-            $(container).trigger("tt.container.updated");
+            this.hoursContainer.render();
+            if( settings.nowLine ) {
+              this.nowLine.render();
+            }
+            this.container.trigger("tt.container.updated");
             event.stopPropagation();
         }, tt));
-        $(container).on("tt-activitiesChanged", $.proxy(function(evnt) {
+        container.on("tt-activitiesChanged", $.proxy(function(evnt) {
             this.render();
         }, tt));
 
