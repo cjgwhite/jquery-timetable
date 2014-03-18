@@ -8,10 +8,11 @@
             minHourSize: 50,
             minDaySize: 50,
             dayTitleSize: 75,
+            dayTitleCalcFontSize: true,
             hourTitleSize: 75,
             startHour: 9,
             endHour: 17,
-            nowLineEnable: true,
+            nowLine: true,
             amPm: false,
             startDay: 1,
             endDay: 5,
@@ -23,12 +24,13 @@
                 events: {}
             },
             daysOptions: {
-                events: {},
+                events: {}
             },
             ActivityOptions: {
                 mouseoverDelay: 500,
                 mouseoverMinHeight: 0,
                 mouseoverMinWidth: 0,
+                mouseoverAnimation: true,
                 mouseoverEasing: "easeOutElastic",
                 mouseoverSpeed: "normal",
                 zindex: 1000,
@@ -36,8 +38,9 @@
             }
         };
 
+        container = $(container);
         var OptionsDependant = function(container) {
-            this.container = $(container);
+            this.container = container;
         };
 
         var settings = $.extend(true, defaultOptions, options);
@@ -88,12 +91,12 @@
                             var cssObj = {
                                 "position": "relative"
                             };
-                            $(this.container)
+                            this.container
                                     .addClass("tt-container")
                                     .css(cssObj)
                                     .attr("role", "grid");
                             if (this.isMobile()) {
-                                $(this.container).addClass("tt-mobile");
+                                this.container.addClass("tt-mobile");
                             }
                         },
                         _init: function() {
@@ -143,7 +146,7 @@
                         },
                         resize: function() {
 
-                            $(this.container).trigger("tt.update");
+                            this.container.trigger("tt.update");
 
                         }
                     }
@@ -373,9 +376,9 @@
                         toabort.abort();
                     if (this.ajaxOn !== null) {
                         this.ajaxOn.done(function(data) {
-                            $(container).trigger("tt-renderStart");
+                            container.trigger("tt-renderStart");
                         }).done($.proxy(this.__populateActivities, this)).fail(function() {
-                            $(container).trigger("tt-activityLoadFailed");
+                            container.trigger("tt-activityLoadFailed");
                         });
 
                     }
@@ -390,9 +393,9 @@
 
                             this.daysActivities.push(activity);
                         }, this));
-                        $(container).trigger("tt-activitiesRendered");
+                        container.trigger("tt-activitiesRendered");
                     } else {
-                        $(container).trigger("tt-noActivities");
+                        container.trigger("tt-noActivities");
                     }
                 },
                 addActivity: function(activity) {
@@ -434,38 +437,40 @@
                         "text-align": "center"
                     };
 
-                    titlePos[posRef[that.orientation()].size] = "100%";
-                    titlePos[posRef[that.orientation()].nonsize] = settings.dayTitleSize;
-                    var hidden = $("<span/>", {style: "visibility:hidden;width:auto;height:auto;font-size:5px;"});
-                    hidden.text(this.dayNames[this.lang][0]);
-                    $(this.container).append(hidden);
-                    var hiddenSize = {
-                        "width": hidden.width(),
-                        "height": hidden.height()
-                    };
-                    while (hiddenSize[posRef[that.orientation()].size] < size / 2 && hiddenSize[posRef[that.orientation()].nonsize] < settings.dayTitleSize / 2) {
-                        var fs = parseInt(hidden.css("font-size"), 10);
-                        hidden.css({
-                            "font-size": (fs + 1) + "px"
+                    if( settings.dayTitleCalcFontSize ) {
+                        titlePos[posRef[that.orientation()].size] = "100%";
+                        titlePos[posRef[that.orientation()].nonsize] = settings.dayTitleSize;
+                        var hidden = $("<span/>", {style: "visibility:hidden;width:auto;height:auto;font-size:5px;"});
+                        hidden.text(this.dayNames[this.lang][0]);
+                        this.container.append(hidden);
+                        var hiddenSize = {
+                            "width": hidden.width(),
+                            "height": hidden.height()
+                        };
+                        while (hiddenSize[posRef[that.orientation()].size] < size / 2 && hiddenSize[posRef[that.orientation()].nonsize] < settings.dayTitleSize/ 2) {
+                            var fs = parseInt(hidden.css("font-size"), 10);
+                            hidden.css({
+                                "font-size": (fs + 1) + "px"
+                            });
+                            hiddenSize.width = hidden.width();
+                            hiddenSize.height = hidden.height();
+                        }
+                        titlePos["font-size"] = hidden.css("font-size");
+
+                        hidden.remove();
+
+                        $('div.tt-dayTitle', this.container).each(function(index, el) {
+                            $(this).css(titlePos);
+                            $(this).css({
+                                "line-height": settings.dayTitleSize + "px"
+                            });
                         });
-                        hiddenSize.width = hidden.width();
-                        hiddenSize.height = hidden.height();
                     }
-                    titlePos["font-size"] = hidden.css("font-size");
-
-                    hidden.remove();
-
-                    $('div.tt-dayTitle', this.container).each(function(index, el) {
-                        $(this).css(titlePos);
-                        $(this).css({
-                            "line-height": settings.dayTitleSize + "px"
-                        });
-                    });
 
                 }
             }, settings.daysOptions);
 
-            $(container).on("tt-activitiesChanged", $.proxy(DC.renderActivities, DC));
+            container.on("tt-activitiesChanged", $.proxy(DC.renderActivities, DC));
 
             return DC;
         };
@@ -493,7 +498,7 @@
                 now: new Date(),
                 init: function() {
                     var that = this;
-                    if( settings.nowLineEnable && this.isDayView() ) {
+                    if( settings.nowLine && this.isDayView() ) {
                         this.container.on("tt.dayChange", function(){
                             if( that.container.find('.tt-today')[0] ) {
                                 that.render();
@@ -518,7 +523,6 @@
                         cssObj[posRef[this.orientation()].size] = "2px";
                         cssObj[posRef[this.orientation()].nonsize] = "100%";
                         cssObj[posRef[this.orientation()].position] = (hourIndex * settings.hourSize) + hourOffset + settings.dayTitleSize;
-                        console.log(cssObj);
 
                         this.element = $("<div/>", { "class": "tt-nowLine", "aria-hidden": "true" }).css(cssObj);
                         this.container.find('.tt-today').append(this.element);
@@ -589,13 +593,15 @@
 
 
                     if (changed === true) {
-                        $(container).trigger("tt.update");
+                        container.trigger("tt.update");
                     } else {
                         this.resize();
                     }
 
                     this._setColour();
-                    $(this.container).on("activityAdded", $.proxy(this._onActivityAdded, this));
+                    this.container.on("activityAdded", $.proxy(this._onActivityAdded, this));
+
+                    this.activityObj.data("activity", this);
 
                 },
                 overlaps: new Array(),
@@ -684,7 +690,7 @@
                 },
                 remove: function() {
                     this.activityObj.fadeOut("slow").remove();
-                    $(this.container).off("activityAdded", this._onActivityAdded);
+                    this.container.off("activityAdded", this._onActivityAdded);
                 },
                 __activityCSSObj: {
                     position: "absolute"
@@ -739,8 +745,8 @@
                                     "z-index": settings.ActivityOptions.zindex+2,
                                     "box-shadow": "0 6px 10px rgba(0,0,0,0.75)"
                                 });
-                                var width = Math.max(content.scrollWidth, defaultOptions.ActivityOptions.mouseoverMinWidth) + 5;
-                                var height = Math.max(content.scrollHeight, defaultOptions.ActivityOptions.mouseoverMinHeight);
+                                var width = Math.max(content.scrollWidth, settings.ActivityOptions.mouseoverMinWidth) + 5;
+                                var height = Math.max(content.scrollHeight, settings.ActivityOptions.mouseoverMinHeight);
                                 var diffH = height - content.oldH;
                                 var diffW = width - content.oldW;
                                 if (diffH > 0) {
@@ -752,10 +758,14 @@
                                     css['width'] = "+=" + diffW;
                                 }
 
-                                $(content).animate(css, defaultOptions.ActivityOptions.mouseoverSpeed, defaultOptions.ActivityOptions.mouseoverEasing);
+                                if( settings.ActivityOptions.mouseoverAnimation ){
+                                    $(content).animate(css, settings.ActivityOptions.mouseoverSpeed, settings.ActivityOptions.mouseoverEasing);
+                                } else {
+                                    $(content).css(css);
+                                }
                                 $(content).addClass('tt-activity-expanded');
 
-                            }, defaultOptions.ActivityOptions.mouseoverDelay);
+                            }, settings.ActivityOptions.mouseoverDelay);
                         }
                     },
                     "blur mouseleave": function() {
@@ -774,7 +784,11 @@
                                 "box-shadow": "none"
                             });
 
-                            $(this).animate(css, defaultOptions.ActivityOptions.mouseoverSpeed, defaultOptions.ActivityOptions.mouseoverEasing);
+                            if( settings.ActivityOptions.mouseoverAnimation ){
+                                $(this).animate(css, settings.ActivityOptions.mouseoverSpeed, settings.ActivityOptions.mouseoverEasing);
+                            } else {
+                                $(this).css(css);
+                            }
                             $(this).removeClass('tt-activity-expanded');
 
                         }
@@ -786,17 +800,17 @@
 
 
 
-            $(container).on("tt.event.update", $.proxy(function() {
+            container.on("tt.event.update", $.proxy(function() {
                 this.resize();
             }, A));
 
-            $(container).on("tt.container.updated", function(event) {
+            container.on("tt.container.updated", function(event) {
                 A.resize();
                 A.render();
                 event.stopPropagation();
             });
 
-            $(container).on("tt-activitiesRendered", function(event) {
+            container.on("tt-activitiesRendered", function(event) {
                 A.resize();
                 A.render();
                 event.stopPropagation();
@@ -815,7 +829,7 @@
             $.extend(true, MO, {
                 overlay: $("<div/>", {"class": "tt-overlay", style: "display: none;"}).append($("<div/>", {"class": "tt-message"}).html("No Message")),
                 init: function() {
-                    $(container).append(this.overlay);
+                    this.container.append(this.overlay);
 
                     $(this.overlay).css({
                         "position": "relative",
@@ -837,8 +851,8 @@
                     this.overlay.fadeOut();
                 },
                 resize: function() {
-                    var width = $(container).width();
-                    var height = $(container).height();
+                    var width = this.container.width();
+                    var height = this.container.height();
                     var top = 0;
                     var left = 0;
 
@@ -851,8 +865,8 @@
 
                     var overlayMsg = $(".tt-message", this.overlay);
                     overlayMsg.css({
-                        top: ($(container).height() - overlayMsg.height()) / 2,
-                        left: ($(container).width() - overlayMsg.width()) / 2
+                        top: (this.container.height() - overlayMsg.height()) / 2,
+                        left: (this.container.width() - overlayMsg.width()) / 2
 
                     });
                 }
@@ -860,22 +874,22 @@
 
 
 
-            $(container).on("tt-noActivities", function() {
+            container.on("tt-noActivities", function() {
                 MO.show($.isFunction(settings.NoContentMsg) ? settings.NoContentMsg() : settings.NoContentMsg);
             });
-            $(container).on("tt.container.updated", function(event) {
+            container.on("tt.container.updated", function(event) {
                 MO.resize();
             });
-            $(container).on("tt-activitiesRendered", function(event) {
+            container.on("tt-activitiesRendered", function(event) {
                 MO.hide();
             });
-            $(container).on("tt-activitiesLoading", function(event) {
+            container.on("tt-activitiesLoading", function(event) {
                 MO.show($.isFunction(settings.loadingMsg) ? settings.loadingMsg() : settings.loadingMsg);
             });
-            $(container).on("tt-renderStart", function(event) {
+            container.on("tt-renderStart", function(event) {
                 MO.show("Rendering Timetable");
             });
-            $(container).on("tt-activityLoadFailed", function(event) {
+            container.on("tt-activityLoadFailed", function(event) {
                 MO.show($.isFunction(settings.loadErrorMsg) ? settings.loadErrorMsg() : settings.loadErrorMsg);
             });
 
@@ -891,21 +905,21 @@
 
         // attach event Handlers
         $(window).on("resize", $.proxy(function() {
-            $(this.container).trigger("tt.update");
+            this.container.trigger("tt.update");
         }, tt));
-        $(container).on("tt.changed", $.proxy(function(event) {
-            $(this.container).trigger("tt.update");
+        container.on("tt.changed", $.proxy(function(event) {
+            this.container.trigger("tt.update");
         }, tt));
-        $(container).on("tt.update", $.proxy(function(event) {
+        container.on("tt.update", $.proxy(function(event) {
             this.daysContainer.render();
             this.hoursContainer.render();
-            if( settings.nowLineEnable ) {
+            if( settings.nowLine ) {
               this.nowLine.render();
             }
-            $(container).trigger("tt.container.updated");
+            this.container.trigger("tt.container.updated");
             event.stopPropagation();
         }, tt));
-        $(container).on("tt-activitiesChanged", $.proxy(function(evnt) {
+        container.on("tt-activitiesChanged", $.proxy(function(evnt) {
             this.render();
         }, tt));
 
