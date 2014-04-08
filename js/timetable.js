@@ -16,6 +16,7 @@
             NoContentMsg: "No Activities to Display",
             loadingMsg: "Loading...",
             loadErrorMsg: "An error occured loading the Timetable",
+            activityAttribute: null,
             hoursOptions: {
                 events: {}
             },
@@ -340,7 +341,13 @@
                     if (toabort)
                         toabort.abort();
                     if (this.ajaxOn !== null) {
-                        this.ajaxOn.done(function(data) {
+                        this.ajaxOn.then(function(data) {
+                            if (settings['activityAttribute'] !== null && data[settings['activityAttribute']]) {
+                                return data[settings['activityAttribute']];
+                            } else {
+                                return data;
+                            }
+                        }).done(function(data) {
                             $(container).trigger("tt-renderStart");
                         }).done($.proxy(this.__populateActivities, this)).fail(function() {
                             $(container).trigger("tt-activityLoadFailed");
