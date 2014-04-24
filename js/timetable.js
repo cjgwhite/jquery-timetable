@@ -9,6 +9,7 @@
             minDaySize: 50,
             startHour: 9,
             endHour: 17,
+            nowLineEnable: true,
             startDay: 1,
             endDay: 5,
             activities: [],
@@ -29,6 +30,7 @@
                 mouseoverMinWidth: 0,
                 mouseoverEasing: "easeOutElastic",
                 mouseoverSpeed: "normal",
+                zindex: 1000,
                 events: {}
             }
         };
@@ -80,7 +82,8 @@
                     };
                     $(tt.container)
                             .addClass("tt-container")
-                            .css(cssObj);
+                            .css(cssObj)
+                            .attr("role", "grid");;
                     if (tt.isMobile()) {
                         $(tt.container).addClass("tt-mobile");
                     }
@@ -93,6 +96,7 @@
                         hoursContainer: new HoursContainer(),
                         daysContainer: new DaysContainer(),
                         messageOverlay: new MessageOverlay(),
+                        nowLine: new NowLine(),
                         name: "timetable",
                         option: function(key, value) {
                             if ($.isPlainObject(key)) {
@@ -137,9 +141,12 @@
                     $(this.container).trigger("tt.update");
                 }, tt),
                 "tt.update": $.proxy(function() {
-                    this.hoursContainer.render();
                     this.daysContainer.render();
+                    this.hoursContainer.render();
                     this.daysContainer.placeActivities();
+                    if (settings.nowLineEnable) {
+                        this.nowLine.render();
+                    }
                     $(container).trigger("tt.container.updated");
                     event.stopPropagation();
                 }, tt),
@@ -150,9 +157,11 @@
 
             $(container).on(events);
 
-            tt.hoursContainer.init();
+            
             tt.daysContainer.init();
+            tt.hoursContainer.init();
             tt.messageOverlay.init();
+            tt.nowLine.init();
 
             tt.resize();
             internal.create();
@@ -191,7 +200,7 @@
                     var aHours = new Array();
                     for (var hour = 0; hour < 24; hour++) {
                         var hourStr = (hour < 10) ? "0" + hour + "00" : hour + "00";
-                        aHours.push($("<div/>", {"class": "tt-hour", style: "width: 100%;"}).text(hourStr).on(this.events));
+                        aHours.push($("<div/>", {"class": "tt-hour", style: "width: 100%;","aria-hidden": "true"}).text(hourStr).on(this.events));
                     }
                     return aHours;
                 },
@@ -297,22 +306,22 @@
                     return days;
                 },
                 _generateDays: function() {
-                    
+
                     var eventHandlers = this.events,
-                         days = [],
-                         today = (new Date()).getDay(),
-                         dayHeaders = this._generateDayHeaders();
-                    
+                            days = [],
+                            today = (new Date()).getDay(),
+                            dayHeaders = this._generateDayHeaders();
+
                     $.each(dayHeaders, function(index, $day) {
 //                        days.push($("<div/>", {"class": "tt-day"}).bind(eventHandlers).append($day));
                         days.push(
-                             $("<div/>", {
-                                 "class": "tt-day" + (today === index ? " tt-today" : ""),
-                                 "role": "row"
-                             })
-                             .on(eventHandlers)
-                             .append($day)
-                         );
+                                $("<div/>", {
+                                    "class": "tt-day" + (today === index ? " tt-today" : ""),
+                                    "role": "row"
+                                })
+                                .on(eventHandlers)
+                                .append($day)
+                                );
                     });
 
                     return days;
@@ -599,7 +608,13 @@
                 scheduledDay: 0,
                 duration: 60,
                 activityMargin: 0,
-                activityObj: $("<div/>", {"class": "tt-activity", style: "position: relative; display: none; overflow: hidden;", "tabindex": 0}),
+//                activityObj: $("<div/>", {"class": "tt-activity", style: "position: relative; display: none; overflow: hidden;", "tabindex": 0}),
+                activityObj: $("<div/>", {
+                     "class": "tt-activity",
+                     style: "position: relative; display: none; overflow: hidden; z-index: " + settings.ActivityOptions.zindex,
+                     "role": "gridcell",
+                     "tabindex": 0
+                 }),
                 _init: function() {
                     var start = this.startTime.split(":");
                     this.dow = parseInt(this.scheduledDay);
@@ -695,9 +710,11 @@
                             content.oldT = position.top;
                             content.oldL = position.left;
                             this.to = setTimeout(function() {
-                                var css = {};
+                                var css = {
+                                    "z-index": settings.ActivityOptions.zindex+2
+                                };
                                 $(content).css({
-                                    "z-index": 1000,
+                                    "z-index": settings.ActivityOptions.zindex+2,
                                     "box-shadow": "0 6px 10px rgba(0,0,0,0.75)"
                                 });
                                 var width = Math.max(content.scrollWidth, defaultOptions.ActivityOptions.mouseoverMinWidth) + 5;
@@ -722,12 +739,19 @@
                         clearTimeout(this.to);
                         if (this.expanded == true) {
                             this.expanded = false;
+                            var css = {
+                                 width: this.oldW,
+                                 height: this.oldH,
+                                 top: this.oldT,
+                                 left: this.oldL,
+                                 "z-index": settings.ActivityOptions.zindex
+                             };
                             $(this).css({
-                                "z-index": 0,
                                 "box-shadow": "none"
                             });
-
-                            $(this).animate({width: this.oldW, height: this.oldH, top: this.oldT, left: this.oldL, "z-index": 0}, defaultOptions.ActivityOptions.mouseoverSpeed, defaultOptions.ActivityOptions.mouseoverEasing);
+                            
+                            $(this).animate(css, defaultOptions.ActivityOptions.mouseoverSpeed, defaultOptions.ActivityOptions.mouseoverEasing);
+                            $(this).removeClass('tt-activity-expanded');
 
                         }
                     }
@@ -743,18 +767,75 @@
             return A;
         };
 
+        var NowLine = function() {
+            var NL = new OptionsDependant(container);
+
+            var posRef = {
+                landscape: {
+                    size: "width",
+                    nonsize: "height",
+                    position: "left",
+                    nonposition: "top"
+                },
+                portrait: {
+                    size: "height",
+                    nonsize: "width",
+                    position: "top",
+                    nonposition: "left"
+                }
+            };
+
+            $.extend(true, NL, {
+                now: new Date(),
+                init: function() {
+                    var that = this;
+                    if (settings.nowLineEnable && this.isDayView()) {
+                        this.container.on("tt.dayChange", function() {
+                            if (that.container.find('.tt-today')[0]) {
+                                that.render();
+                            }
+                        });
+                    }
+                },
+                render: function() {
+                    var hourIndex = this.now.getHours() - settings.startHour,
+                            hourOffset = (settings.hourSize / 60) * this.now.getMinutes();
+
+                    if (this.element) {
+                        this.element.remove();
+                    }
+                    if (this.now.getHours() >= settings.startHour &&
+                            this.now.getHours() <= settings.endHour)
+                    {
+                        var cssObj = {
+                            "position": "absolute",
+                            "z-index": settings.ActivityOptions.zindex + 1
+                        };
+                        cssObj[posRef[this.orientation()].size] = "2px";
+                        cssObj[posRef[this.orientation()].nonsize] = "100%";
+                        cssObj[posRef[this.orientation()].position] = (hourIndex * settings.hourSize) + hourOffset + settings.titleSize;//settings.dayTitleSize;
+//                         console.log(cssObj);
+
+                        this.element = $("<div/>", {"class": "tt-nowLine", "aria-hidden": "true"}).css(cssObj);
+                        this.container.find('.tt-today').append(this.element);
+                    }
+                }
+            });
+
+            return NL;
+        }
+
         var MessageOverlay = function() {
             var MO = new OptionsDependant(container);
 
             $.extend(true, MO, {
                 overlay: $("<div/>", {"class": "tt-overlay", style: "display: none;"}).append($("<div/>", {"class": "tt-message"}).html("No Message")),
                 init: function() {
-                    var index = (parseInt($(container).css("z-index")) | 0) + 10;
                     $(container).append(this.overlay);
 
                     $(this.overlay).css({
                         "position": "relative",
-                        "z-index": index
+                        "z-index": settings.ActivityOptions.zindex + 10
                     });
 
                     $(".tt-message", this.overlay).css({
