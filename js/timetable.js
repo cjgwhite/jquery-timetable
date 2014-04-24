@@ -36,8 +36,9 @@
             }
         };
 
+        container = $(container);
         var OptionsDependant = function(container) {
-            this.container = $(container);
+            this.container = container;
         };
 
         var settings = $.extend(true, defaultOptions, options);
@@ -81,12 +82,12 @@
                     var cssObj = {
                         "position": "relative"
                     };
-                    $(tt.container)
+                   tt.container
                             .addClass("tt-container")
                             .css(cssObj)
                             .attr("role", "grid");;
                     if (tt.isMobile()) {
-                        $(tt.container).addClass("tt-mobile");
+                        tt.container.addClass("tt-mobile");
                     }
                 }
             };
@@ -139,16 +140,16 @@
 
             var events = {
                 "tt.changed": $.proxy(function() {
-                    $(this.container).trigger("tt.update");
+                    this.container.trigger("tt.update");
                 }, tt),
-                "tt.update": $.proxy(function() {
+                "tt.update": $.proxy(function(event) {
                     this.daysContainer.render();
                     this.hoursContainer.render();
                     this.daysContainer.placeActivities();
                     if (settings.nowLineEnable) {
                         this.nowLine.render();
                     }
-                    $(container).trigger("tt.container.updated");
+                    this.container.trigger("tt.container.updated");
                     event.stopPropagation();
                 }, tt),
                 "tt-activitiesChanged": $.proxy(function(evnt) {
@@ -156,7 +157,7 @@
                 }, tt)
             };
 
-            $(container).on(events);
+            container.on(events);
 
             
             tt.daysContainer.init();
@@ -406,9 +407,9 @@
                                 return data;
                             }
                         }).done(function(data) {
-                            $(container).trigger("tt-renderStart");
+                            container.trigger("tt-renderStart");
                         }).done($.proxy(this.__populateActivities, this)).fail(function() {
-                            $(container).trigger("tt-activityLoadFailed");
+                            container.trigger("tt-activityLoadFailed");
                         });
                     }
                 },
@@ -524,9 +525,9 @@
 
                         this.placeActivities();
 
-                        $(container).trigger("tt-activitiesRendered");
+                        container.trigger("tt-activitiesRendered");
                     } else {
-                        $(container).trigger("tt-noActivities");
+                        container.trigger("tt-noActivities");
                     }
                 },
                 addActivity: function(activity) {
@@ -599,7 +600,7 @@
                 }
             }, settings.daysOptions);
 
-            $(container).on("tt-activitiesChanged", $.proxy(DC.renderActivities, DC));
+            container.on("tt-activitiesChanged", $.proxy(DC.renderActivities, DC));
 
             return DC;
         };
@@ -663,7 +664,7 @@
 
 
                     if (changed === true) {
-                        $(container).trigger("tt.update");
+                        container.trigger("tt.update");
                     }
 
                     this._setColour();
@@ -852,7 +853,7 @@
             $.extend(true, MO, {
                 overlay: $("<div/>", {"class": "tt-overlay", style: "display: none;"}).append($("<div/>", {"class": "tt-message"}).html("No Message")),
                 init: function() {
-                    $(container).append(this.overlay);
+                    container.append(this.overlay);
 
                     $(this.overlay).css({
                         "position": "relative",
@@ -874,8 +875,8 @@
                     this.overlay.fadeOut();
                 },
                 resize: function() {
-                    var width = $(container).width();
-                    var height = $(container).height();
+                    var width = container.width();
+                    var height = container.height();
                     var top = 0;
                     var left = 0;
 
@@ -888,14 +889,14 @@
 
                     var overlayMsg = $(".tt-message", this.overlay);
                     overlayMsg.css({
-                        top: ($(container).height() - overlayMsg.height()) / 2,
-                        left: ($(container).width() - overlayMsg.width()) / 2
+                        top: (container.height() - overlayMsg.height()) / 2,
+                        left: (container.width() - overlayMsg.width()) / 2
 
                     });
                 }
             });
 
-            $(container).on({
+            container.on({
                 "tt-noActivities": function(event) {
                     MO.show($.isFunction(settings.NoContentMsg) ? settings.NoContentMsg() : settings.NoContentMsg);
                 },
@@ -921,7 +922,7 @@
         }
         var tt = createTimeTable();
         $(window).on("resize", function() {
-            $(container).trigger("tt.update");
+            container.trigger("tt.update");
         });
         return tt;
     };
