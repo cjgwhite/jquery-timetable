@@ -72,7 +72,21 @@
 
 
         function createTimeTable() {
-            return $.extend(
+
+            var internal = {
+                create: function() {
+                    var cssObj = {
+                        "position": "relative"
+                    };
+                    $(tt.container)
+                            .addClass("tt-container")
+                            .css(cssObj);
+                    if (tt.isMobile()) {
+                        $(tt.container).addClass("tt-mobile");
+                    }
+                }
+            };
+            var tt = $.extend(
                     true,
                     new OptionsDependant(container),
                     {
@@ -80,25 +94,7 @@
                         daysContainer: new DaysContainer(),
                         messageOverlay: new MessageOverlay(),
                         name: "timetable",
-                        _create: function() {
-                            var cssObj = {
-                                "position": "relative"
-                            };
-                            $(this.container)
-                                    .addClass("tt-container")
-                                    .css(cssObj);
-                            if (this.isMobile()) {
-                                $(this.container).addClass("tt-mobile");
-                            }
-                        },
-                        _init: function() {
-                            this.hoursContainer.init();
-                            this.daysContainer.init();
-                            this.messageOverlay.init();
-                            this.resize();
-                        },
                         option: function(key, value) {
-
                             if ($.isPlainObject(key)) {
                                 settings = $.extend(true, settings, key);
                                 $.each(key, $.proxy(function(key, val) {
@@ -129,19 +125,40 @@
                                 settings.activities = activityList;
                             }
                             this.daysContainer.renderActivities();
-
-
-                        },
-                        refresh: function() {
-                            this.activityContainer.render();
                         },
                         resize: function() {
-
                             $(this.container).trigger("tt.update");
-
                         }
                     }
             );
+
+            var events = {
+                "tt.changed": $.proxy(function() {
+                    $(this.container).trigger("tt.update");
+                }, tt),
+                "tt.update": $.proxy(function() {
+                    this.hoursContainer.render();
+                    this.daysContainer.render();
+                    this.daysContainer.placeActivities();
+                    $(container).trigger("tt.container.updated");
+                    event.stopPropagation();
+                }, tt),
+                "tt-activitiesChanged": $.proxy(function(evnt) {
+                    this.render();
+                }, tt)
+            };
+
+            $(container).on(events);
+
+            tt.hoursContainer.init();
+            tt.daysContainer.init();
+            tt.messageOverlay.init();
+
+            tt.resize();
+            internal.create();
+            tt.render();
+
+            return tt;
         }
         ;
 
@@ -233,6 +250,7 @@
                     position: "top",
                     nonposition: "left"
                 }
+
             };
             $.extend(true, DC, {
                 dayNames: {
@@ -325,7 +343,7 @@
                         activity.remove();
                         delete activity;
                     });
-
+                    this.daysActivities = new Array();
 
                     if ($.isFunction(settings.activities)) {
                         this.__populateActivities(settings.activities());
@@ -352,9 +370,83 @@
                         }).done($.proxy(this.__populateActivities, this)).fail(function() {
                             $(container).trigger("tt-activityLoadFailed");
                         });
+                    }
+                },
+                placeActivities: function() {
 
+                    var PackEvents = $.proxy(function(columns, block_width) {
+                        var collisions = columns.length;
+                        $.each(columns, function(colIndex, col) {
+                            $.each(col, function(i, activity) {
+                                var hourIndex = activity.hour - settings.startHour;
+                                var hourOffset = (settings.hourSize / 60) * activity.minute;
+                                activity.setPosition({
+                                    hour: (hourIndex * settings.hourSize) + hourOffset + settings.titleSize, // hourPosition
+                                    size: activity.duration * (settings.hourSize / 60), // durationSize
+                                    day: ((colIndex / collisions) * 100) + '%', //left                          // 
+                                    nonsize: block_width / collisions - 1         //width                       // 
+                                });
+                                activity.render();
+                            });
+                        });
+//                           
+                    }, this);
+
+                    var collidesWith = function(a, b)
+                    {
+                        var aTop = (a.hour * 60) + a.minute;
+                        var bTop = (b.hour * 60) + b.minute;
+                        var aBottom = aTop + a.duration;
+                        var bBottom = bTop + b.duration;
+
+                        return aBottom > bTop && aTop < bBottom;
                     }
 
+                    var lastEventEnding = null;
+                    var lastEventDay = null;
+                    var columns = [];
+                    var block_width = settings.daySize;
+                    $(this.daysActivities).each(function(index, activity) {
+//                            var activity = $(a);
+                        var thisEventStart = (activity.hour * 60) + activity.minute;
+                        var thisEventEnding = thisEventStart + activity.duration;
+                        if (
+                                lastEventEnding !== null &&
+                                (thisEventStart >= lastEventEnding || lastEventDay < activity.dow)
+                                ) {
+                            PackEvents(columns, block_width);
+                            columns = [];
+                            lastEventEnding = null;
+                        }
+
+                        var placed = false;
+                        for (var i = 0; i < columns.length; i++) {
+                            var col = columns[ i ];
+                            var collides = false;
+                            $.each(col, function(index, placedActivity) {
+                                if (collidesWith(placedActivity, activity)) {
+                                    collides = true;
+                                    return false;
+                                }
+                            });
+
+                            if (!collides) {
+                                col.push(activity);
+                                placed = true;
+                                break;
+                            }
+                        }
+                        if (!placed) {
+                            columns.push([activity]);
+                        }
+                        if (lastEventEnding === null || thisEventEnding > lastEventEnding || activity.dow > lastEventDay) {
+                            lastEventEnding = thisEventEnding;
+                            lastEventDay = activity.dow;
+                        }
+                    });
+                    if (columns.length > 0) {
+                        PackEvents(columns, block_width);
+                    }
 
                 },
                 __populateActivities: function(activities) {
@@ -365,6 +457,33 @@
 
                             this.daysActivities.push(activity);
                         }, this));
+
+                        this.daysActivities = this.daysActivities.sort(function(e1, e2) {
+                            if (e1.dow < e2.dow)
+                                return -1;
+                            if (e1.dow > e2.dow)
+                                return 1;
+
+                            var e1Top = (e1.hour * 60) + e1.minute;
+                            var e2Top = (e2.hour * 60) + e2.minute;
+                            var e1Bottom = e1Top + e1.duration;
+                            var e2Bottom = e2Top + e2.duration;
+
+                            if (e1Top < e2Top)
+                                return -1;
+                            if (e1Top > e2Top)
+                                return 1;
+
+                            if (e1Bottom < e2Bottom)
+                                return -1;
+                            if (e1Bottom > e2Bottom)
+                                return 1;
+
+                            return 0;
+                        });
+
+                        this.placeActivities();
+
                         $(container).trigger("tt-activitiesRendered");
                     } else {
                         $(container).trigger("tt-noActivities");
@@ -472,9 +591,7 @@
                 activityMargin: 0,
                 activityObj: $("<div/>", {"class": "tt-activity", style: "position: relative; display: none; overflow: hidden;", "tabindex": 0}),
                 _init: function() {
-
                     var start = this.startTime.split(":");
-
                     this.dow = parseInt(this.scheduledDay);
                     this.hour = parseInt(start[0], 10);
                     this.minute = parseInt(start[1], 10);
@@ -501,57 +618,11 @@
 
                     if (changed === true) {
                         $(container).trigger("tt.update");
-                    } else {
-                        this.resize();
                     }
 
                     this._setColour();
-                    $(this.container).on("activityAdded", $.proxy(this._onActivityAdded, this));
 
                 },
-                overlaps: new Array(),
-                addOverlap: function(overlap) {
-                    this.overlaps.push(overlap);
-                },
-                _onActivityAdded: function(event) {
-                    if (this.overlapWith(event.activity)) {
-                        this.negotiatePosition(event.activity);
-                        this.addOverlap(event.activity);
-                        event.activity.addOverlap(this);
-                    }
-//                    this.container.trigger("tt.event.update");
-                },
-                overlapWith: function(activity) {
-                    var thisTime = (this.hour * 60) + this.minute;
-                    var thatTime = (activity.hour * 60) + activity.minute;
-                    if (
-                            (thisTime >= thatTime && thisTime < thatTime + activity.duration) ||
-                            (thatTime >= thisTime && thatTime < thisTime + this.duration)
-                            )
-                        return true;
-                },
-                negotiatePosition: function(activity) {
-                    if (activity.sizeFactor < this.sizeFactor) {
-                        activity.sizeFactor++;
-                    } else if (activity.sizeFactor > this.sizeFactor) {
-                        this.sizeFactor++;
-                    } else {
-                        activity.sizeFactor++;
-                        this.sizeFactor++;
-                    }
-
-                    var positions = new Array();
-                    positions.push(this.position);
-                    $.each(activity.overlaps, function(index, overlap) {
-                        positions.push(overlap.position);
-                    });
-                    while ($.inArray(activity.position, positions) != - 1)
-                        activity.position++;
-
-
-                },
-                position: 0,
-                sizeFactor: 1,
                 content: function() {
                     return this.title + "<br />" + this.hour + ":" + this.minute + " - " + this.duration + " Minutes";
                 },
@@ -573,9 +644,7 @@
                         var css = {
                             background: 'linear-gradient(127deg, ' + startColour.toHexString() + ' 25%, ' + endColour.toHexString() + ' 100%)'
                         }
-
                         this.activityObj.css(css);
-
                     }
                     this.activityObj.css({"background-color": baseColour});
                 },
@@ -586,51 +655,24 @@
                         this.activityObj.html(content());
                     } else
                         this.activityObj.html(content);
-                    this.container.trigger({
-                        type: "activityAdded",
-                        activity: this
-                    });
-                    this.activityObj.fadeIn("slow");
-                    this.resize();
                 },
                 remove: function() {
                     this.activityObj.fadeOut("slow").remove();
-                    $(this.container).off("activityAdded", this._onActivityAdded);
                 },
-                __activityCSSObj: {
+                activityCSSObj: {
                     position: "absolute"
+                },
+                setPosition: function(position) {
+                    var ref = posRef[this.orientation()];
+                    var that = this;
+                    $.each(position, function(key, value) {
+                        that.activityCSSObj[ref[key]] = value;
+                    });
                 },
                 render: function() {
                     this.container.append(this.activityObj);
-                    this.activityObj.css(this.__activityCSSObj);
-                },
-                resize: function() {
-                    var dayIndex = this.dow - settings.startDay;
-                    var hourIndex = this.hour - settings.startHour;
-                    var hourOffset = (settings.hourSize / 60) * this.minute;
-
-                    var expandto = {
-                        position: 1000000,
-                        sizeFactor: 0
-                    };
-                    $.each(this.overlaps, $.proxy(function(index, activity) {
-                        if (activity.position > this.position && activity.position <= expandto.position && activity.sizeFactor >= expandto.sizeFactor) {
-                            expandto = activity;
-                        }
-                    }, this));
-
-                    var activityWidth = (settings.daySize) / (this.sizeFactor);
-
-                    this.__activityCSSObj[posRef[this.orientation()].hour] = (hourIndex * settings.hourSize) + hourOffset + settings.titleSize;
-                    this.__activityCSSObj[posRef[this.orientation()].day] = (activityWidth * this.position) + this.activityMargin;
-                    this.__activityCSSObj[posRef[this.orientation()].size] = this.duration * (settings.hourSize / 60);
-                    if (expandto.sizeFactor > 0 && (activityWidth * this.position + activityWidth) != ((settings.daySize / expandto.sizeFactor) * expandto.position)) {
-                        activityWidth += ((settings.daySize / expandto.sizeFactor) * expandto.position) - (activityWidth * this.position + activityWidth);
-                        this.__activityCSSObj[posRef[this.orientation()].nonsize] = activityWidth - this.activityMargin - 1;
-                    } else {
-                        this.__activityCSSObj[posRef[this.orientation()].nonsize] = activityWidth - (this.activityMargin * 2) - 1;
-                    }
-
+                    this.activityObj.css(this.activityCSSObj);
+                    this.activityObj.fadeIn("slow");
                 },
                 events: {
                     "focus mouseenter": function() {
@@ -683,24 +725,6 @@
 
 
             }, settings.ActivityOptions, data);
-
-
-
-            $(container).on("tt.event.update", $.proxy(function() {
-                this.resize();
-            }, A));
-
-            $(container).on("tt.container.updated", function(event) {
-                A.resize();
-                A.render();
-                event.stopPropagation();
-            });
-
-            $(container).on("tt-activitiesRendered", function(event) {
-                A.resize();
-                A.render();
-                event.stopPropagation();
-            });
 
             A._init();
 
@@ -759,57 +783,34 @@
                 }
             });
 
+            $(container).on({
+                "tt-noActivities": function(event) {
+                    MO.show($.isFunction(settings.NoContentMsg) ? settings.NoContentMsg() : settings.NoContentMsg);
+                },
+                "tt.container.updated": function(event) {
+                    MO.resize();
+                },
+                "tt-activitiesRendered": function(event) {
+                    MO.hide();
+                },
+                "tt-activitiesLoading": function(event) {
+                    MO.show($.isFunction(settings.loadingMsg) ? settings.loadingMsg() : settings.loadingMsg);
+                },
+                "tt-renderStart": function(event) {
+                    MO.show("Rendering Timetable");
+                },
+                "tt-activityLoadFailed": function(event) {
+                    MO.show($.isFunction(settings.loadErrorMsg) ? settings.loadErrorMsg() : settings.loadErrorMsg);
+                }
 
-
-            $(container).on("tt-noActivities", function() {
-                MO.show($.isFunction(settings.NoContentMsg) ? settings.NoContentMsg() : settings.NoContentMsg);
-            });
-            $(container).on("tt.container.updated", function(event) {
-                MO.resize();
-            });
-            $(container).on("tt-activitiesRendered", function(event) {
-                MO.hide();
-            });
-            $(container).on("tt-activitiesLoading", function(event) {
-                MO.show($.isFunction(settings.loadingMsg) ? settings.loadingMsg() : settings.loadingMsg);
-            });
-            $(container).on("tt-renderStart", function(event) {
-                MO.show("Rendering Timetable");
-            });
-            $(container).on("tt-activityLoadFailed", function(event) {
-                MO.show($.isFunction(settings.loadErrorMsg) ? settings.loadErrorMsg() : settings.loadErrorMsg);
             });
 
             return MO;
         }
-
-
-
-
-
         var tt = createTimeTable();
-
-
-        // attach event Handlers
-        $(window).on("resize", $.proxy(function() {
-            $(this.container).trigger("tt.update");
-        }, tt));
-        $(container).on("tt.changed", $.proxy(function(event) {
-            $(this.container).trigger("tt.update");
-        }, tt));
-        $(container).on("tt.update", $.proxy(function(event) {
-            this.hoursContainer.render();
-            this.daysContainer.render();
-            $(container).trigger("tt.container.updated");
-            event.stopPropagation();
-        }, tt));
-        $(container).on("tt-activitiesChanged", $.proxy(function(evnt) {
-            this.render();
-        }, tt));
-
-        tt._init();
-        tt._create();
-        tt.render();
+        $(window).on("resize", function() {
+            $(container).trigger("tt.update");
+        });
         return tt;
     };
 
