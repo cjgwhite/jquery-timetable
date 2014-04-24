@@ -739,8 +739,8 @@
                                     "z-index": settings.ActivityOptions.zindex+2,
                                     "box-shadow": "0 6px 10px rgba(0,0,0,0.75)"
                                 });
-                                var width = Math.max(content.scrollWidth, defaultOptions.ActivityOptions.mouseoverMinWidth) + 5;
-                                var height = Math.max(content.scrollHeight, defaultOptions.ActivityOptions.mouseoverMinHeight);
+                                var width = Math.max(content.scrollWidth, settings.ActivityOptions.mouseoverMinWidth) + 5;
+                                var height = Math.max(content.scrollHeight, settings.ActivityOptions.mouseoverMinHeight);
                                 var diffH = height - content.oldH;
                                 var diffW = width - content.oldW;
                                 if (diffH > 0) {
@@ -752,9 +752,9 @@
                                     css['width'] = "+=" + diffW;
                                 }
 
-                                $(content).animate(css, defaultOptions.ActivityOptions.mouseoverSpeed, defaultOptions.ActivityOptions.mouseoverEasing);
+                                $(content).animate(css, settings.ActivityOptions.mouseoverSpeed, settings.ActivityOptions.mouseoverEasing);
 
-                            }, defaultOptions.ActivityOptions.mouseoverDelay);
+                            }, settings.ActivityOptions.mouseoverDelay);
                         }
                     },
                     "blur mouseleave": function() {
@@ -772,7 +772,7 @@
                                 "box-shadow": "none"
                             });
                             
-                            $(this).animate(css, defaultOptions.ActivityOptions.mouseoverSpeed, defaultOptions.ActivityOptions.mouseoverEasing);
+                            $(this).animate(css, settings.ActivityOptions.mouseoverSpeed, settings.ActivityOptions.mouseoverEasing);
                             $(this).removeClass('tt-activity-expanded');
 
                         }
