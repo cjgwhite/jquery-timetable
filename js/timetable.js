@@ -297,12 +297,22 @@
                     return days;
                 },
                 _generateDays: function() {
-                    var eventHandlers = this.events;
-
-                    var days = [];
-                    var dayHeaders = this._generateDayHeaders();
+                    
+                    var eventHandlers = this.events,
+                         days = [],
+                         today = (new Date()).getDay(),
+                         dayHeaders = this._generateDayHeaders();
+                    
                     $.each(dayHeaders, function(index, $day) {
-                        days.push($("<div/>", {"class": "tt-day"}).bind(eventHandlers).append($day));
+//                        days.push($("<div/>", {"class": "tt-day"}).bind(eventHandlers).append($day));
+                        days.push(
+                             $("<div/>", {
+                                 "class": "tt-day" + (today === index ? " tt-today" : ""),
+                                 "role": "row"
+                             })
+                             .on(eventHandlers)
+                             .append($day)
+                         );
                     });
 
                     return days;
